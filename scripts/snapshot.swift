@@ -79,6 +79,7 @@ struct Palette {
 }
 
 let fontCSS: [String: String] = [
+    "fraunces": "\"Fraunces Variable\", ui-serif, Georgia, serif",
     "bricolage": "\"Bricolage Grotesque Variable\", ui-rounded, system-ui, sans-serif",
     "inter": "\"Inter Variable\", system-ui, -apple-system, sans-serif",
     "newYork": "ui-serif, \"New York\", Georgia, serif",
@@ -117,7 +118,7 @@ let themes: [String: Theme] = [
             synRed: "#FF8A9A", synAmber: "#FFC37A", synTeal: "#5DE3D0",
             synBlue: "#8FBCFF", synPurple: "#C9A2FF", synComment: "#7D7869"
         ),
-        displayFont: "bricolage", bodyFont: "inter", monoFont: "jetbrainsMono",
+        displayFont: "fraunces", bodyFont: "inter", monoFont: "jetbrainsMono",
         headingWeight: 600, spectral: true
     ),
     "manuscript": Theme(

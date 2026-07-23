@@ -12,6 +12,17 @@
 <meta name="twitter:card" content="summary_large_image">
 <style>
   @font-face {
+    /* Galley's own display face — deliberately not Bricolage Grotesque,
+       which is the Thesis Labs / kept house headline font. Fraunces is a
+       warm variable serif; it also just suits a "typeset manuscript" app
+       better than a grotesque sans does. */
+    font-family: "Fraunces Variable";
+    src: url("fonts/fraunces-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
     font-family: "Bricolage Grotesque Variable";
     src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2-variations");
     font-weight: 200 800;
@@ -60,7 +71,7 @@
     --maxw: 1200px;
     --pad: clamp(1.25rem, 5vw, 4rem);
     --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-    --font-display: "Bricolage Grotesque Variable", ui-rounded, system-ui, sans-serif;
+    --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
     --font-body: "Inter Variable", system-ui, -apple-system, sans-serif;
     --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
   }
@@ -560,7 +571,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <span>Set in Bricolage Grotesque, Inter, and JetBrains Mono.</span>
+      <span>Set in Fraunces, Inter, and JetBrains Mono.</span>
       <span>The best software doesn&rsquo;t ask for your attention. Galley doesn&rsquo;t even ask for your keyboard.</span>
     </div>
   </div>
