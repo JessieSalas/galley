@@ -1,6 +1,17 @@
 import SwiftUI
 import WebKit
 
+/// WKWebView that tells the model when it lands in a window, so window-level
+/// styling (titlebar appearance) can be applied at the right moment.
+final class GalleyWebView: WKWebView {
+    var onMoveToWindow: (() -> Void)?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window != nil { onMoveToWindow?() }
+    }
+}
+
 /// Hosts the WKWebView that renders the document. All chrome is native SwiftUI;
 /// this view is just the page.
 struct ReaderWebView: NSViewRepresentable {
@@ -16,7 +27,10 @@ struct ReaderWebView: NSViewRepresentable {
         configuration.setURLSchemeHandler(model.schemeHandler, forURLScheme: DocAssetSchemeHandler.scheme)
         configuration.websiteDataStore = .nonPersistent()
 
-        let webView = WKWebView(frame: .zero, configuration: configuration)
+        let webView = GalleyWebView(frame: .zero, configuration: configuration)
+        webView.onMoveToWindow = { [weak model] in
+            model?.pushOptions()
+        }
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsMagnification = true

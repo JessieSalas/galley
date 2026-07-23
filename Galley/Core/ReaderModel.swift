@@ -55,9 +55,24 @@ final class ReaderModel: NSObject, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.pushOptions() }
 
+        // Follow the system light/dark switch when the theme is "System".
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(systemAppearanceChanged),
+            name: Notification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil
+        )
+
         if UserDefaults.standard.bool(forKey: SettingsKeys.liveReload), let url = fileURL {
             watcher = FileWatcher(url: url) { [weak self] in self?.reloadFromDisk() }
             isWatching = true
+        }
+    }
+
+    @objc private func systemAppearanceChanged() {
+        // NSApp.effectiveAppearance updates a beat after the notification.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.pushOptions()
         }
     }
 
@@ -67,6 +82,7 @@ final class ReaderModel: NSObject, ObservableObject {
         saveScrollPosition()
         for o in fullScreenObservers { NotificationCenter.default.removeObserver(o) }
         fullScreenObservers = []
+        DistributedNotificationCenter.default().removeObserver(self)
     }
 
     // MARK: - Web lifecycle
@@ -126,6 +142,7 @@ final class ReaderModel: NSObject, ObservableObject {
     }
 
     func pushOptions() {
+        applyWindowAppearance()
         guard webReady else { return }
         let d = UserDefaults.standard
         let scale = d.double(forKey: SettingsKeys.textScale) * pow(1.1, Double(zoomSteps))
@@ -142,6 +159,18 @@ final class ReaderModel: NSObject, ObservableObject {
             ? NSColor(red: 0.090, green: 0.086, blue: 0.059, alpha: 1)
             : NSColor(red: 0.945, green: 0.925, blue: 0.886, alpha: 1)
         applyRemotePolicy(allowRemote: payload.allowRemote)
+        applyWindowAppearance()
+    }
+
+    /// The app chrome (titlebar, sidebar, popovers) follows the reading theme,
+    /// so Ink never sits under a bright toolbar.
+    private func applyWindowAppearance() {
+        let pref = Appearance(rawValue: UserDefaults.standard.string(forKey: SettingsKeys.appearance) ?? "") ?? .system
+        switch pref {
+        case .system: NSApp.appearance = nil
+        case .paper: NSApp.appearance = NSAppearance(named: .aqua)
+        case .ink: NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
     }
 
     /// Native backstop for "Load images from the web" — a compiled content

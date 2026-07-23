@@ -386,8 +386,13 @@ async function renderMath(root) {
 function collectTOC(root) {
   const toc = [];
   for (const h of root.querySelectorAll("h1, h2, h3, h4")) {
-    const level = Number(h.tagName[1]);
-    toc.push({ level, text: h.textContent.replace(/^¶\s*/, "").trim(), id: h.id || "" });
+    const clone = h.cloneNode(true);
+    for (const btn of clone.querySelectorAll(".anchor-btn")) btn.remove();
+    toc.push({
+      level: Number(h.tagName[1]),
+      text: clone.textContent.trim(),
+      id: h.id || "",
+    });
   }
   return toc;
 }
