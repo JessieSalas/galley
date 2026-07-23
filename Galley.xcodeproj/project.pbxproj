@@ -1,0 +1,536 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		03202F2632B59162FDFF4AEF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71E383E7FE4CCED24FEEF008 /* Assets.xcassets */; };
+		05DF811E96A68994E4850B17 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */; };
+		1F62DA062A55A4703351E3DA /* GalleyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */; };
+		29418FC3951B4BC5B0957091 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */; };
+		2E4DB8DDD63B784AFAED1908 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699DAEB53A36226A66941A53 /* DocumentView.swift */; };
+		49B89766E5FDCAA0A11B3713 /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FDC6009196E42173A91F6B /* PreviewProvider.swift */; };
+		5790F14C9C9C3E2A543E2FEE /* GalleyQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5B1C7BFFF7895D832C7A1A62 /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */; };
+		77D33B689AD29583BC515B76 /* FolderAccessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2673CD79193012F4141D13C /* FolderAccessManager.swift */; };
+		7D100249F11A1CC668085AF1 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24EACAE2789328C8C3F2FA42 /* AppSettings.swift */; };
+		91B98FC3A80AE248389150B1 /* DocAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F64146D1E856876F41F006F /* DocAssetSchemeHandler.swift */; };
+		A123771F6F940089EEF1F0AF /* web in Resources */ = {isa = PBXBuildFile; fileRef = 092B1E029691F665B597682A /* web */; };
+		AA422A9096944AF320D07C67 /* ql.bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = A4FBE38172AC19EECAA65E82 /* ql.bundle.js */; };
+		B611A9650266452DD627D601 /* GalleyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6B850B9945D6F4008614D /* GalleyApp.swift */; };
+		BC1CF0E7A8297DC64B82EA03 /* ReaderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C80EA85526645430F3A8E8 /* ReaderModel.swift */; };
+		C44F792B068C35D097F760A0 /* Exporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */; };
+		C8F230F61E020FB770A36E79 /* ReaderWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */; };
+		CD9AC91344050A701AE853CE /* Samples in Resources */ = {isa = PBXBuildFile; fileRef = 28A6D13291F8F4D549DD4F1F /* Samples */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		03E8A934447BC2CAEF05185E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C3D80CF56B1C83BA21A8C2F4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E0FEA3CB73D4E080AC07DA62;
+			remoteInfo = GalleyQuickLook;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		453AB049ABA65482D48E6B8F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5790F14C9C9C3E2A543E2FEE /* GalleyQuickLook.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		092B1E029691F665B597682A /* web */ = {isa = PBXFileReference; lastKnownFileType = folder; name = web; path = Galley/Resources/web; sourceTree = SOURCE_ROOT; };
+		147D5A604D5978895C17C42E /* Galley.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Galley.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		24EACAE2789328C8C3F2FA42 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		28A6D13291F8F4D549DD4F1F /* Samples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Samples; path = Galley/Resources/Samples; sourceTree = SOURCE_ROOT; };
+		4FC6B850B9945D6F4008614D /* GalleyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleyApp.swift; sourceTree = "<group>"; };
+		5F64146D1E856876F41F006F /* DocAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocAssetSchemeHandler.swift; sourceTree = "<group>"; };
+		6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocument.swift; sourceTree = "<group>"; };
+		699DAEB53A36226A66941A53 /* DocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentView.swift; sourceTree = "<group>"; };
+		71E383E7FE4CCED24FEEF008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		72FDC6009196E42173A91F6B /* PreviewProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewProvider.swift; sourceTree = "<group>"; };
+		8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GalleyQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4FBE38172AC19EECAA65E82 /* ql.bundle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ql.bundle.js; sourceTree = "<group>"; };
+		A5C80EA85526645430F3A8E8 /* ReaderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderModel.swift; sourceTree = "<group>"; };
+		D2673CD79193012F4141D13C /* FolderAccessManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderAccessManager.swift; sourceTree = "<group>"; };
+		D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
+		DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
+		E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderWebView.swift; sourceTree = "<group>"; };
+		E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleyCommands.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		118B53B6FA50CA073A226E20 = {
+			isa = PBXGroup;
+			children = (
+				C4859B1C0A7FE357D258EA5A /* Galley */,
+				CDBBE8A887BAE1A74E097B25 /* QuickLook */,
+				5AE09D2FD1B3646AED9A6FCF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1CEF802ABF8C9E9C273312A2 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				24EACAE2789328C8C3F2FA42 /* AppSettings.swift */,
+				4FC6B850B9945D6F4008614D /* GalleyApp.swift */,
+				E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */,
+				6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		46237604D90E84BAAA062C3D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A4FBE38172AC19EECAA65E82 /* ql.bundle.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5AE09D2FD1B3646AED9A6FCF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				147D5A604D5978895C17C42E /* Galley.app */,
+				8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6FB18EBAEF494A0708F40A37 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				5F64146D1E856876F41F006F /* DocAssetSchemeHandler.swift */,
+				D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */,
+				DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */,
+				D2673CD79193012F4141D13C /* FolderAccessManager.swift */,
+				A5C80EA85526645430F3A8E8 /* ReaderModel.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		AD3FCD28EA8BA012A580ADF3 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				699DAEB53A36226A66941A53 /* DocumentView.swift */,
+				E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */,
+				DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C4859B1C0A7FE357D258EA5A /* Galley */ = {
+			isa = PBXGroup;
+			children = (
+				71E383E7FE4CCED24FEEF008 /* Assets.xcassets */,
+				1CEF802ABF8C9E9C273312A2 /* App */,
+				6FB18EBAEF494A0708F40A37 /* Core */,
+				E7A39FDE9E4EC19FBE83BEA0 /* Resources */,
+				AD3FCD28EA8BA012A580ADF3 /* Views */,
+			);
+			path = Galley;
+			sourceTree = "<group>";
+		};
+		CDBBE8A887BAE1A74E097B25 /* QuickLook */ = {
+			isa = PBXGroup;
+			children = (
+				72FDC6009196E42173A91F6B /* PreviewProvider.swift */,
+				46237604D90E84BAAA062C3D /* Resources */,
+			);
+			path = QuickLook;
+			sourceTree = "<group>";
+		};
+		E7A39FDE9E4EC19FBE83BEA0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				28A6D13291F8F4D549DD4F1F /* Samples */,
+				092B1E029691F665B597682A /* web */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C12FFAD813ABFA3515B2F32D /* Galley */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B517535259E4D2D675817A32 /* Build configuration list for PBXNativeTarget "Galley" */;
+			buildPhases = (
+				B97FBF40FF0EAE34F205D4AA /* Sources */,
+				587098016ABCF8952FE6DEBD /* Resources */,
+				453AB049ABA65482D48E6B8F /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8F7CB4387911BCC0426D9A87 /* PBXTargetDependency */,
+			);
+			name = Galley;
+			packageProductDependencies = (
+			);
+			productName = Galley;
+			productReference = 147D5A604D5978895C17C42E /* Galley.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E0FEA3CB73D4E080AC07DA62 /* GalleyQuickLook */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0C51CCB56839AD89E9BC8997 /* Build configuration list for PBXNativeTarget "GalleyQuickLook" */;
+			buildPhases = (
+				5E855D1C87C959D55EEE9028 /* Sources */,
+				4FB12A618820A4729E7F58BD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GalleyQuickLook;
+			packageProductDependencies = (
+			);
+			productName = GalleyQuickLook;
+			productReference = 8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C3D80CF56B1C83BA21A8C2F4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					C12FFAD813ABFA3515B2F32D = {
+						ProvisioningStyle = Automatic;
+					};
+					E0FEA3CB73D4E080AC07DA62 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 9C8CF71A8E7486BA0E927D57 /* Build configuration list for PBXProject "Galley" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 118B53B6FA50CA073A226E20;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5AE09D2FD1B3646AED9A6FCF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C12FFAD813ABFA3515B2F32D /* Galley */,
+				E0FEA3CB73D4E080AC07DA62 /* GalleyQuickLook */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4FB12A618820A4729E7F58BD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA422A9096944AF320D07C67 /* ql.bundle.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		587098016ABCF8952FE6DEBD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				03202F2632B59162FDFF4AEF /* Assets.xcassets in Resources */,
+				CD9AC91344050A701AE853CE /* Samples in Resources */,
+				A123771F6F940089EEF1F0AF /* web in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5E855D1C87C959D55EEE9028 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49B89766E5FDCAA0A11B3713 /* PreviewProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B97FBF40FF0EAE34F205D4AA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D100249F11A1CC668085AF1 /* AppSettings.swift in Sources */,
+				91B98FC3A80AE248389150B1 /* DocAssetSchemeHandler.swift in Sources */,
+				2E4DB8DDD63B784AFAED1908 /* DocumentView.swift in Sources */,
+				C44F792B068C35D097F760A0 /* Exporter.swift in Sources */,
+				5B1C7BFFF7895D832C7A1A62 /* FileWatcher.swift in Sources */,
+				77D33B689AD29583BC515B76 /* FolderAccessManager.swift in Sources */,
+				B611A9650266452DD627D601 /* GalleyApp.swift in Sources */,
+				1F62DA062A55A4703351E3DA /* GalleyCommands.swift in Sources */,
+				29418FC3951B4BC5B0957091 /* MarkdownDocument.swift in Sources */,
+				BC1CF0E7A8297DC64B82EA03 /* ReaderModel.swift in Sources */,
+				C8F230F61E020FB770A36E79 /* ReaderWebView.swift in Sources */,
+				05DF811E96A68994E4850B17 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8F7CB4387911BCC0426D9A87 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E0FEA3CB73D4E080AC07DA62 /* GalleyQuickLook */;
+			targetProxy = 03E8A934447BC2CAEF05185E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		26D7C6F4E77BD75035A9F6A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Galley/Galley.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Galley/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = do.thesis.galley;
+				PRODUCT_NAME = Galley;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		2A15CAC50609E455F7F8D010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Galley/Galley.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Galley/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = do.thesis.galley;
+				PRODUCT_NAME = Galley;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		46C57A286C00617BD5EE6E08 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = QuickLook/QuickLook.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = QuickLook/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = do.thesis.galley.quicklook;
+				PRODUCT_NAME = GalleyQuickLook;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		532423C72EF8CAFC67992D95 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = QuickLook/QuickLook.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = QuickLook/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = do.thesis.galley.quicklook;
+				PRODUCT_NAME = GalleyQuickLook;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		77D8FE75C9D09A0D577DBD57 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		95C753225D6C068D841D2E4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0C51CCB56839AD89E9BC8997 /* Build configuration list for PBXNativeTarget "GalleyQuickLook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				46C57A286C00617BD5EE6E08 /* Debug */,
+				532423C72EF8CAFC67992D95 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9C8CF71A8E7486BA0E927D57 /* Build configuration list for PBXProject "Galley" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				77D8FE75C9D09A0D577DBD57 /* Debug */,
+				95C753225D6C068D841D2E4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B517535259E4D2D675817A32 /* Build configuration list for PBXNativeTarget "Galley" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2A15CAC50609E455F7F8D010 /* Debug */,
+				26D7C6F4E77BD75035A9F6A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C3D80CF56B1C83BA21A8C2F4 /* Project object */;
+}

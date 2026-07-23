@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en" data-appearance="paper" data-typeface="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reader — dev harness</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  #devbar {
+    position: fixed; top: 10px; right: 10px; z-index: 999;
+    display: flex; gap: 6px; font-family: var(--font-mono); font-size: 10px;
+  }
+  #devbar button {
+    border: 1px solid var(--line-strong); background: var(--bg-hi); color: var(--ink);
+    border-radius: 999px; padding: 4px 10px; cursor: pointer; letter-spacing: 0.1em;
+    text-transform: uppercase; font: inherit;
+  }
+</style>
+</head>
+<body>
+  <div id="devbar">
+    <button onclick="Reader.applyOptions({appearance: document.documentElement.dataset.appearance === 'paper' ? 'ink' : 'paper'})">theme</button>
+    <button onclick="Reader.applyOptions({typeface: {default:'serif',serif:'mono',mono:'system',system:'default'}[document.documentElement.dataset.typeface]})">type</button>
+    <button onclick="Reader.applyOptions({presenting: document.documentElement.dataset.presenting !== 'true'})">present</button>
+    <button onclick="Reader.load({markdown: document.getElementById('sample').textContent + '\n\nAppended at reload — live tail check.', isReload: true, followTail: true})">reload</button>
+  </div>
+  <div id="frame">
+    <div id="fm"></div>
+    <article id="content" class="doc"></article>
+  </div>
+  <div id="live-pill"><span class="dot"></span>updated</div>
+
+<script type="text/markdown" id="sample">---
+title: The Reader Showcase
+author: Thesis Labs
+date: 2026-07-22
+status: draft
+tags: [markdown, design, ai]
+---
+
+# A quiet place to read Markdown
+
+Markdown became the paper of the AI age — plans, reports, READMEs, agent logs. This document exercises **every rendering path** so we can judge the whole system at a glance: *emphasis*, **strength**, ***both***, `inline code`, ~~strikethrough~~, and a [link to somewhere](https://thesis.do) with a spectral hover.
+
+Typographer niceties work too -- dashes, "smart quotes", ellipses... and (c) symbols.
+
+## Structure and rhythm
+
+Body text wants a calm measure, generous leading, and headings that assert without shouting. Here's a second paragraph to check paragraph spacing against the baseline rhythm of the page. It should feel like a well-set book page, not a wiki.
+
+### Lists behave
+
+- Fruit of the loom
+- Second item with `inline code` inside
+  - Nested item one
+  - Nested item two
+- Third item
+
+1. First ordered
+2. Second ordered
+3. Third ordered
+
+### Tasks read like a plan
+
+- [x] Research the landscape
+- [x] Design the reading surface
+- [ ] Ship the reader
+- [ ] Tell people about it
+
+###### section marker
+
+> The best software doesn't ask for your attention. It gives it back.
+
+> [!note]
+> Callouts follow GitHub alert syntax. This one is a note — useful for agent-generated reports.
+
+> [!warning]
+> This one warns. The accent is drawn from the spectral palette, muted for paper.
+
+## Code, in the brand's spectral palette
+
+```swift
+struct Document: Identifiable {
+    let id = UUID()
+    var title: String
+    var body: String
+
+    /// Estimated reading time in minutes.
+    var readingMinutes: Int {
+        max(1, body.split(separator: " ").count / 225)
+    }
+}
+```
+
+```python
+def spectral(colors: list[str]) -> str:
+    """Join brand colors into a gradient stop list."""
+    return ", ".join(f"{c}" for c in colors)
+
+print(spectral(["#ff5d73", "#ffb454", "#36d6c3", "#6aa6ff", "#b07bff"]))
+```
+
+A table for comparisons:
+
+| Reader | Role | Renders mermaid | Feels like |
+| --- | --- | :---: | --- |
+| TextEdit | Default | ✗ | A ransom note |
+| Xcode | Accidental | ✗ | A build error |
+| **This app** | Chosen | ✓ | Paper |
+
+## Diagrams
+
+```mermaid
+flowchart LR
+    A[Agent writes plan.md] --> B{You double-click}
+    B -->|today| C[Xcode opens, 12s later]
+    B -->|with the reader| D[Beautiful page, instantly]
+    D --> E[You share your screen with confidence]
+```
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant Disk
+    participant Reader
+    Agent->>Disk: write report.md
+    Disk-->>Reader: file changed
+    Reader->>Reader: re-render, keep scroll
+    Reader-->>You: quiet "updated" pill
+```
+
+## Mathematics
+
+Inline math like $e^{i\pi} + 1 = 0$ sits in the line. Display math gets room:
+
+$$
+\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}, \qquad
+\oint \mathbf{B} \cdot d\boldsymbol{\ell} = \mu_0 I_{\text{enc}}
+$$
+
+## Media and rules
+
+A horizontal rule is the one place the full spectral gradient appears:
+
+---
+
+Footnotes tuck away politely[^1], and a second one for good measure[^2].
+
+[^1]: This is the first footnote, set smaller and quieter.
+[^2]: Footnotes get a hairline, not a horizon.
+
+## The long tail
+
+After the fold, long documents should stay fast and legible. The reader keeps your scroll position on live reload, follows the tail when an agent is still writing, and never asks you to configure anything first.
+</script>
+
+<script src="reader.bundle.js"></script>
+<script>
+  Reader.load({ markdown: document.getElementById("sample").textContent });
+</script>
+</body>
+</html>

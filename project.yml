@@ -1,0 +1,67 @@
+name: Galley
+options:
+  bundleIdPrefix: do.thesis
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: true
+    DEAD_CODE_STRIPPING: true
+
+targets:
+  Galley:
+    type: application
+    platform: macOS
+    sources:
+      - Galley/App
+      - Galley/Views
+      - Galley/Core
+      - path: Galley/Resources/web
+        type: folder
+        buildPhase: resources
+      - path: Galley/Resources/Samples
+        type: folder
+        buildPhase: resources
+      - Galley/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: do.thesis.galley
+        PRODUCT_NAME: Galley
+        INFOPLIST_FILE: Galley/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Galley/Galley.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: true
+    dependencies:
+      - target: GalleyQuickLook
+        embed: true
+
+  GalleyQuickLook:
+    type: app-extension
+    platform: macOS
+    sources:
+      - QuickLook/PreviewProvider.swift
+      - path: QuickLook/Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: do.thesis.galley.quicklook
+        PRODUCT_NAME: GalleyQuickLook
+        INFOPLIST_FILE: QuickLook/Info.plist
+        CODE_SIGN_ENTITLEMENTS: QuickLook/QuickLook.entitlements
+        SKIP_INSTALL: true
+
+schemes:
+  Galley:
+    build:
+      targets:
+        Galley: all
+    run:
+      config: Debug
+    archive:
+      config: Release
