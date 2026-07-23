@@ -71,12 +71,12 @@ file types behind your back either — it registers as an *alternate* handler.)
 
 | Key | Action |
 | --- | --- |
-| `⌘F` | Find in document |
+| `⌘F` / `⌘G` / `⌘⇧G` | Find, find next, find previous |
 | `⌃⌘S` | Toggle outline sidebar |
-| `⌘+` / `⌘−` / `⌘0` | Zoom |
+| `⌘=` / `⌘−` / `⌘0` | Zoom |
 | `⌘⇧P` | Presentation mode |
 | `⌘R` | Reload from disk |
-| `⌘E` / `⌘⇧E` | Export PDF / HTML |
+| `⌥⌘E` / `⌥⌘⇧E` | Export PDF / HTML |
 | `⌘⇧C` | Copy Markdown source |
 | `⌥⌘⇧C` | Copy for AI (source + file path header) |
 | Space | Page down |

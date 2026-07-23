@@ -93,7 +93,7 @@ struct OutlineSidebar: View {
         List(selection: Binding(
             get: { model.activeHeadingID },
             set: { newValue in
-                if let id = newValue { model.scrollToHeading(id) }
+                if let id = newValue { model.selectHeading(id) }
             }
         )) {
             if model.toc.isEmpty {
@@ -163,16 +163,25 @@ struct FindBar: View {
 struct FolderAccessBanner: View {
     @ObservedObject var model: ReaderModel
 
+    private var message: String {
+        switch model.folderAccessReason {
+        case .images:
+            "Galley doesn't have permission to read this document's folder, so its images can't load."
+        case .link:
+            "That link points to a file Galley doesn't have permission to read."
+        }
+    }
+
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "photo.badge.exclamationmark")
+            Image(systemName: "lock.badge.clock")
                 .foregroundStyle(.secondary)
-            Text("Some images live next to this file.")
+            Text(message)
                 .font(.callout)
-            Button("Show Images…") { model.grantFolderAccess() }
+            Button("Grant Access…") { model.grantFolderAccess() }
                 .controlSize(.small)
             Button {
-                model.needsFolderAccess = false
+                model.dismissFolderBanner()
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption2)

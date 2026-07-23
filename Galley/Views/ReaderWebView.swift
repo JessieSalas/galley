@@ -33,8 +33,9 @@ struct ReaderWebView: NSViewRepresentable {
         }
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
-        webView.allowsMagnification = true
-        webView.setValue(false, forKey: "drawsBackground")
+        // Pinch-zoom would be a third, invisible zoom system fighting the
+        // text-size setting and ⌘0 — typography zoom is the one true zoom.
+        webView.allowsMagnification = false
         #if DEBUG
         webView.isInspectable = true
         #endif

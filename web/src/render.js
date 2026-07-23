@@ -231,6 +231,26 @@ function sanitizeRemote(root) {
   for (const el of root.querySelectorAll("[srcset]")) el.removeAttribute("srcset");
 }
 
+/* Raw HTML in markdown is allowed for layout (tables, <details>, <img>), but
+   never for behavior: strip scripts, on*-handlers, and javascript: URLs.
+   The template's CSP is the second lock on the same door. */
+function sanitizeDOM(root) {
+  for (const el of root.querySelectorAll("script, noscript")) el.remove();
+  for (const el of root.querySelectorAll("*")) {
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith("on") || name === "srcdoc") {
+        el.removeAttribute(attr.name);
+      } else if (
+        (name === "href" || name === "src" || name === "xlink:href" || name === "action" || name === "formaction") &&
+        /^\s*javascript:/i.test(attr.value)
+      ) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  }
+}
+
 /* ---------------- GitHub-style alerts ---------------- */
 
 function transformCallouts(root) {
@@ -485,6 +505,16 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/* the reader's own scrolling wins over post-render position pinning */
+let userScrolledSinceRender = false;
+window.addEventListener("wheel", () => { userScrolledSinceRender = true; }, { passive: true });
+window.addEventListener("touchmove", () => { userScrolledSinceRender = true; }, { passive: true });
+window.addEventListener("keydown", (e) => {
+  if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(e.key)) {
+    userScrolledSinceRender = true;
+  }
+});
+
 /* scroll reporting (throttled) */
 let scrollTimer = null;
 window.addEventListener("scroll", () => {
@@ -502,6 +532,9 @@ function getScrollFraction() {
 }
 
 function setScrollFraction(f) {
+  // Called by the native side to restore a saved reading position — it
+  // outranks the render pipeline's own position pinning.
+  userScrolledSinceRender = true;
   const h = document.documentElement;
   h.scrollTop = f * (h.scrollHeight - h.clientHeight);
 }
@@ -562,20 +595,30 @@ const Reader = {
     content.innerHTML = md.render(body);
     if (seq !== state.lastRenderSeq) return; // superseded
 
+    sanitizeDOM(content);
     transformCallouts(content);
     sanitizeRemote(content);
     wireContent(content);
 
-    // restore position before async decorations to avoid visible jumps
-    if (isReload) {
-      if (followTail && wasAtBottom) {
-        document.documentElement.scrollTop = document.documentElement.scrollHeight;
-      } else {
-        document.documentElement.scrollTop = prevScroll;
-      }
-    } else {
-      document.documentElement.scrollTop = 0;
-    }
+    // Scroll target for this render; re-applied as async decorations
+    // (math, diagrams, image decode) change the document height —
+    // unless the reader has scrolled in the meantime.
+    const target =
+      isReload && followTail && wasAtBottom
+        ? { mode: "bottom" }
+        : isReload
+          ? { mode: "keep", y: prevScroll }
+          : { mode: "top" };
+    userScrolledSinceRender = false;
+
+    const applyTarget = () => {
+      if (userScrolledSinceRender) return;
+      const h = document.documentElement;
+      if (target.mode === "bottom") h.scrollTop = h.scrollHeight;
+      else if (target.mode === "keep") h.scrollTop = target.y;
+      else h.scrollTop = 0;
+    };
+    applyTarget();
 
     post("toc", { items: collectTOC(content) });
     post("stats", { ...computeStats(content.innerText), frontMatter: fm ? Object.keys(fm) : [] });
@@ -584,14 +627,19 @@ const Reader = {
     if (seq !== state.lastRenderSeq) return;
     await renderMermaidBlocks(content);
     if (seq !== state.lastRenderSeq) return;
+    applyTarget();
 
-    if (isReload) {
-      if (followTail && wasAtBottom) {
-        document.documentElement.scrollTop = document.documentElement.scrollHeight;
-      }
-      showLivePill();
-    }
+    if (isReload) showLivePill();
     post("rendered", { isReload });
+
+    // Late image decodes still shift layout; settle once, then pin again.
+    await Promise.allSettled(
+      Array.from(content.querySelectorAll("img")).map((img) =>
+        img.decode ? img.decode().catch(() => {}) : Promise.resolve()
+      )
+    );
+    if (seq !== state.lastRenderSeq) return;
+    applyTarget();
   },
 
   applyOptions(opts) {

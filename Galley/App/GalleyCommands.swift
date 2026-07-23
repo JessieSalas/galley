@@ -27,16 +27,17 @@ struct GalleyCommands: Commands {
         }
 
         CommandGroup(replacing: .saveItem) {
+            // ⌘E stays free: it's the system-wide "Use Selection for Find".
             Button("Export as PDF…") {
                 if let model { Exporter.exportPDF(model: model) }
             }
-            .keyboardShortcut("e", modifiers: .command)
+            .keyboardShortcut("e", modifiers: [.command, .option])
             .disabled(model == nil)
 
             Button("Export as HTML…") {
                 if let model { Exporter.exportHTML(model: model) }
             }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
+            .keyboardShortcut("e", modifiers: [.command, .option, .shift])
             .disabled(model == nil)
 
             Divider()
@@ -64,6 +65,18 @@ struct GalleyCommands: Commands {
             }
             .keyboardShortcut("f", modifiers: .command)
             .disabled(model == nil)
+            Button("Find Next") {
+                if let model {
+                    if model.findBarVisible { model.find(forward: true) } else { model.findBarVisible = true }
+                }
+            }
+            .keyboardShortcut("g", modifiers: .command)
+            .disabled(model == nil)
+            Button("Find Previous") {
+                model?.find(forward: false)
+            }
+            .keyboardShortcut("g", modifiers: [.command, .shift])
+            .disabled(model == nil)
         }
 
         CommandGroup(after: .toolbar) {
@@ -71,7 +84,7 @@ struct GalleyCommands: Commands {
                 .keyboardShortcut("0", modifiers: .command)
                 .disabled(model == nil)
             Button("Zoom In") { model?.zoom(steps: 1) }
-                .keyboardShortcut("+", modifiers: .command)
+                .keyboardShortcut("=", modifiers: .command) // ⌘= — what ⌘+ physically is on ANSI keyboards
                 .disabled(model == nil)
             Button("Zoom Out") { model?.zoom(steps: -1) }
                 .keyboardShortcut("-", modifiers: .command)

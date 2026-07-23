@@ -27,7 +27,7 @@ they are; they just finally look the way they deserve.
 - **It's screen-share-proof.** No cursor, no edit mode, no raw syntax. Present
   a document without presenting your editor.
 - **It stays out of the way.** `⌘F` to find, `⌘⇧P` to present full screen,
-  `⌘E` to export a PDF. The sidebar (`⌃⌘S`) shows the document's outline.
+  `⌥⌘E` to export a PDF. The sidebar (`⌃⌘S`) shows the document's outline.
 
 > [!tip]
 > Open **Help → Feature Tour** to see every rendering feature on one page.

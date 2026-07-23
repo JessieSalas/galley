@@ -64,7 +64,11 @@ final class ReaderModel: NSObject, ObservableObject {
         )
 
         if UserDefaults.standard.bool(forKey: SettingsKeys.liveReload), let url = fileURL {
-            watcher = FileWatcher(url: url) { [weak self] in self?.reloadFromDisk() }
+            watcher = FileWatcher(
+                url: url,
+                onChange: { [weak self] in self?.reloadFromDisk() },
+                onInvalidate: { [weak self] in self?.isWatching = false }
+            )
             isWatching = true
         }
     }
@@ -268,7 +272,8 @@ final class ReaderModel: NSObject, ObservableObject {
             if let fraction = body["fraction"] as? Double {
                 pendingScrollFraction = fraction
             }
-            if let heading = body["activeHeading"] as? String {
+            if let heading = body["activeHeading"] as? String,
+               Date() >= suppressActiveHeadingUntil {
                 activeHeadingID = heading.isEmpty ? nil : heading
             }
         case "rendered":
@@ -299,13 +304,14 @@ final class ReaderModel: NSObject, ObservableObject {
             }
             if scheme == "doc-asset" { return }
         }
-        // Relative link → resolve against the document folder.
+        // Relative link → resolve against the document folder. The href
+        // arrives percent-encoded from markdown-it, so decode exactly once.
         guard let base = fileURL?.deletingLastPathComponent() else { return }
         let parts = href.split(separator: "#", maxSplits: 1)
-        let relPath = String(parts.first ?? "")
-        guard !relPath.isEmpty,
-              let resolved = URL(string: relPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? relPath, relativeTo: base)?.absoluteURL
-        else { return }
+        var relPath = String(parts.first ?? "")
+        relPath = relPath.removingPercentEncoding ?? relPath
+        guard !relPath.isEmpty else { return }
+        let resolved = URL(fileURLWithPath: relPath, relativeTo: base).standardizedFileURL
         openLocalDocument(at: resolved)
     }
 
@@ -318,25 +324,52 @@ final class ReaderModel: NSObject, ObservableObject {
         if FileManager.default.isReadableFile(atPath: url.path) {
             NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
         } else {
-            offerFolderAccessIfUseful()
+            offerFolderAccess(reason: .link(url))
         }
     }
 
-    private func offerFolderAccessIfUseful() {
+    enum FolderAccessReason: Equatable {
+        case images
+        case link(URL)
+    }
+
+    @Published var folderAccessReason: FolderAccessReason = .images
+    private var bannerDismissedForThisDocument = false
+
+    func dismissFolderBanner() {
+        needsFolderAccess = false
+        bannerDismissedForThisDocument = true
+    }
+
+    private func offerFolderAccess(reason: FolderAccessReason) {
+        guard !bannerDismissedForThisDocument else { return }
         guard let dir = fileURL?.deletingLastPathComponent() else { return }
         guard !FolderAccessManager.shared.canRead(path: dir.path) else { return }
+        folderAccessReason = reason
         needsFolderAccess = true
+    }
+
+    private func offerFolderAccessIfUseful() {
+        offerFolderAccess(reason: .images)
     }
 
     func grantFolderAccess() {
         guard let dir = fileURL?.deletingLastPathComponent() else { return }
+        let reason = folderAccessReason
         FolderAccessManager.shared.requestAccess(
             startingAt: dir,
-            message: "Galley needs read access to this folder to show the document's local images and linked files."
+            message: "Galley needs permission to read this folder to show the document's images and open linked files."
         ) { [weak self] granted in
             Task { @MainActor in
-                self?.needsFolderAccess = false
-                if granted { self?.pushContent(isReload: true) }
+                guard let self else { return }
+                self.needsFolderAccess = false
+                guard granted else { return }
+                self.pushContent(isReload: true)
+                // Finish what the user was doing: a link click that was
+                // blocked on permissions now completes.
+                if case .link(let url) = reason {
+                    self.openLocalDocument(at: url)
+                }
             }
         }
     }
@@ -388,7 +421,20 @@ final class ReaderModel: NSObject, ObservableObject {
 
     func zoom(steps: Int) {
         zoomSteps = steps == 0 ? 0 : min(max(zoomSteps + steps, -6), 10)
+        if steps == 0 {
+            webView?.magnification = 1
+        }
         pushOptions()
+    }
+
+    /// Sidebar clicks drive a smooth scroll; ignore scroll-derived heading
+    /// updates until it settles so the selection doesn't flicker or snap back.
+    private(set) var suppressActiveHeadingUntil = Date.distantPast
+
+    func selectHeading(_ id: String) {
+        activeHeadingID = id
+        suppressActiveHeadingUntil = Date().addingTimeInterval(0.8)
+        scrollToHeading(id)
     }
 
     func togglePresentation() {

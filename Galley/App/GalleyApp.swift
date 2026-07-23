@@ -19,6 +19,7 @@ struct GalleyApp: App {
             DocumentView(document: configuration.document, fileURL: configuration.fileURL)
         }
         .commands {
+            SidebarCommands()
             GalleyCommands()
         }
 
