@@ -11,10 +11,12 @@
 		05DF811E96A68994E4850B17 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */; };
 		1F62DA062A55A4703351E3DA /* GalleyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */; };
 		29418FC3951B4BC5B0957091 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */; };
+		2BF6BFB1B690925B6BB09486 /* MarkdownEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4D5B13503E00B2592D177D /* MarkdownEditorView.swift */; };
 		2E4DB8DDD63B784AFAED1908 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699DAEB53A36226A66941A53 /* DocumentView.swift */; };
 		49B89766E5FDCAA0A11B3713 /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FDC6009196E42173A91F6B /* PreviewProvider.swift */; };
 		5790F14C9C9C3E2A543E2FEE /* GalleyQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5B1C7BFFF7895D832C7A1A62 /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */; };
+		5D38EC0AD4A1E43A5126C5D4 /* Themes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F70494F33B4E0E924F69B6 /* Themes.swift */; };
 		77D33B689AD29583BC515B76 /* FolderAccessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2673CD79193012F4141D13C /* FolderAccessManager.swift */; };
 		7D100249F11A1CC668085AF1 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24EACAE2789328C8C3F2FA42 /* AppSettings.swift */; };
 		91B98FC3A80AE248389150B1 /* DocAssetSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F64146D1E856876F41F006F /* DocAssetSchemeHandler.swift */; };
@@ -25,6 +27,7 @@
 		C44F792B068C35D097F760A0 /* Exporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */; };
 		C8F230F61E020FB770A36E79 /* ReaderWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */; };
 		CD9AC91344050A701AE853CE /* Samples in Resources */ = {isa = PBXBuildFile; fileRef = 28A6D13291F8F4D549DD4F1F /* Samples */; };
+		F5769FC4909F7024E45E725B /* MarkdownSourceHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41A012669184BFDADC7A47C /* MarkdownSourceHighlighter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +59,7 @@
 		147D5A604D5978895C17C42E /* Galley.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Galley.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		24EACAE2789328C8C3F2FA42 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		28A6D13291F8F4D549DD4F1F /* Samples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Samples; path = Galley/Resources/Samples; sourceTree = SOURCE_ROOT; };
+		3C4D5B13503E00B2592D177D /* MarkdownEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorView.swift; sourceTree = "<group>"; };
 		4FC6B850B9945D6F4008614D /* GalleyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleyApp.swift; sourceTree = "<group>"; };
 		5F64146D1E856876F41F006F /* DocAssetSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocAssetSchemeHandler.swift; sourceTree = "<group>"; };
 		6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocument.swift; sourceTree = "<group>"; };
@@ -65,12 +69,14 @@
 		8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GalleyQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4FBE38172AC19EECAA65E82 /* ql.bundle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ql.bundle.js; sourceTree = "<group>"; };
 		A5C80EA85526645430F3A8E8 /* ReaderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderModel.swift; sourceTree = "<group>"; };
+		C41A012669184BFDADC7A47C /* MarkdownSourceHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSourceHighlighter.swift; sourceTree = "<group>"; };
 		D2673CD79193012F4141D13C /* FolderAccessManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderAccessManager.swift; sourceTree = "<group>"; };
 		D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
 		DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
 		E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderWebView.swift; sourceTree = "<group>"; };
 		E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleyCommands.swift; sourceTree = "<group>"; };
+		F3F70494F33B4E0E924F69B6 /* Themes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Themes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -118,7 +124,9 @@
 				D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */,
 				DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */,
 				D2673CD79193012F4141D13C /* FolderAccessManager.swift */,
+				C41A012669184BFDADC7A47C /* MarkdownSourceHighlighter.swift */,
 				A5C80EA85526645430F3A8E8 /* ReaderModel.swift */,
+				F3F70494F33B4E0E924F69B6 /* Themes.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -127,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				699DAEB53A36226A66941A53 /* DocumentView.swift */,
+				3C4D5B13503E00B2592D177D /* MarkdownEditorView.swift */,
 				E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */,
 				DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */,
 			);
@@ -284,9 +293,12 @@
 				B611A9650266452DD627D601 /* GalleyApp.swift in Sources */,
 				1F62DA062A55A4703351E3DA /* GalleyCommands.swift in Sources */,
 				29418FC3951B4BC5B0957091 /* MarkdownDocument.swift in Sources */,
+				2BF6BFB1B690925B6BB09486 /* MarkdownEditorView.swift in Sources */,
+				F5769FC4909F7024E45E725B /* MarkdownSourceHighlighter.swift in Sources */,
 				BC1CF0E7A8297DC64B82EA03 /* ReaderModel.swift in Sources */,
 				C8F230F61E020FB770A36E79 /* ReaderWebView.swift in Sources */,
 				05DF811E96A68994E4850B17 /* SettingsView.swift in Sources */,
+				5D38EC0AD4A1E43A5126C5D4 /* Themes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

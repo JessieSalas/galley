@@ -12,8 +12,10 @@ they are; they just finally look the way they deserve.
 1. **Set Galley as your default.** Select any `.md` file in Finder, press
    `⌘I`, choose **Galley** under *Open with*, and click **Change All**.
    From then on, double-click means *read*.
-2. **Pick your page.** Click the `Aa` button in the toolbar — Paper or Ink,
-   four typefaces, your preferred line width.
+2. **Pick your page.** Click the `Aa` button in the toolbar — five themes
+   (Thesis, Manuscript, Studio, Terminal, Editorial), each with its own light
+   and dark, plus size and line width. Fonts and colors are customizable per
+   theme in Settings.
 3. **Press Space in Finder** on any Markdown file — Galley quietly renders
    your Quick Look previews too.
 
@@ -32,10 +34,17 @@ they are; they just finally look the way they deserve.
 > [!tip]
 > Open **Help → Feature Tour** to see every rendering feature on one page.
 
+## When you do need to change something
+
+Every document opens read-only, every time — that's the point. But when a typo
+needs fixing, press `⌘⇧E`: a deliberate edit mode with syntax-highlighted
+Markdown source, undo, find, and an explicit `⌘S` save. Leave it, and you're
+back to paper. Galley never *opens* into an editor.
+
 ## What it refuses to do
 
-No editing. No vault. No account. No sync. No subscription. No telemetry.
-Galley reads files you open, and that's the whole story.
+No vault. No account. No sync. No subscription. No telemetry.
+Galley reads the files you open, and that's the whole story.
 
 ---
 

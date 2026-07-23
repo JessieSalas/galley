@@ -17,24 +17,44 @@ struct DocumentView: View {
         } detail: {
             readerArea
         }
-        .navigationSubtitle(model.badge ?? "")
+        .navigationSubtitle(subtitle)
         .toolbar { toolbarContent }
         .focusedSceneValue(\.readerModel, model)
         .onDisappear { model.saveScrollPosition() }
     }
 
+    private var subtitle: String {
+        var parts: [String] = []
+        if model.isEditing { parts.append("Editing") }
+        if let badge = model.badge { parts.append(badge) }
+        return parts.joined(separator: " · ")
+    }
+
     private var readerArea: some View {
         ZStack(alignment: .top) {
+            // Both layers stay alive at all times — the web view so its scroll
+            // position and rendered state survive the round trip, the editor
+            // so its undo stack does too. Only opacity/hit-testing swap.
             ReaderWebView(model: model)
                 .ignoresSafeArea(edges: .bottom)
+                .opacity(model.isEditing ? 0 : 1)
+                .allowsHitTesting(!model.isEditing)
+
+            MarkdownEditorView(model: model)
+                .opacity(model.isEditing ? 1 : 0)
+                .allowsHitTesting(model.isEditing)
 
             VStack(spacing: 8) {
-                if model.findBarVisible {
+                if model.findBarVisible && !model.isEditing {
                     FindBar(model: model)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                if model.needsFolderAccess {
+                if model.needsFolderAccess && !model.isEditing {
                     FolderAccessBanner(model: model)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                if model.externalChangePending && model.isEditing {
+                    ExternalChangeBanner(model: model)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer(minLength: 0)
@@ -43,16 +63,23 @@ struct DocumentView: View {
             .padding(.top, 8)
             .animation(.easeOut(duration: 0.18), value: model.findBarVisible)
             .animation(.easeOut(duration: 0.18), value: model.needsFolderAccess)
+            .animation(.easeOut(duration: 0.18), value: model.externalChangePending)
         }
     }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            if model.isWatching {
+        // The live dot gets its own item with a real frame — inside the grouped
+        // pill the 7 pt circle ends up crammed against the first button.
+        ToolbarItem(placement: .primaryAction) {
+            if model.isWatching && !model.isEditing {
                 LiveDot()
+                    .frame(width: 18, height: 18)
+                    .padding(.horizontal, 2)
                     .help("Watching for changes — the page updates when the file is saved")
             }
+        }
+        ToolbarItemGroup(placement: .primaryAction) {
 
             Button {
                 showTypePopover.toggle()
@@ -64,15 +91,43 @@ struct DocumentView: View {
                 AppearancePopover(model: model)
             }
 
+            if !model.isEditing {
+                Button {
+                    showInfo.toggle()
+                } label: {
+                    Label("Info", systemImage: "info.circle")
+                }
+                .help("Document statistics")
+                .popover(isPresented: $showInfo, arrowEdge: .bottom) {
+                    InfoPopover(model: model)
+                }
+            }
+
+            if model.isEditing {
+                Button {
+                    model.saveDraft()
+                } label: {
+                    Label("Save", systemImage: "checkmark.circle")
+                }
+                .help("Save changes (⌘S)")
+                .disabled(!model.isDirty)
+            }
+
             Button {
-                showInfo.toggle()
+                if model.isEditing {
+                    model.requestExitEdit()
+                } else {
+                    model.enterEdit()
+                }
             } label: {
-                Label("Info", systemImage: "info.circle")
+                Label(model.isEditing ? "Done Editing" : "Edit Markdown", systemImage: "square.and.pencil")
             }
-            .help("Document statistics")
-            .popover(isPresented: $showInfo, arrowEdge: .bottom) {
-                InfoPopover(model: model)
-            }
+            .symbolVariant(model.isEditing ? .fill : .none)
+            .tint(model.isEditing ? Color.accentColor : nil)
+            .help(model.canEdit
+                  ? (model.isEditing ? "Done Editing (⌘⇧E)" : "Edit Markdown (⌘⇧E)")
+                  : "This document can't be edited")
+            .disabled(!model.canEdit)
 
             Menu {
                 ExportCommands(model: model)
@@ -195,6 +250,29 @@ struct FolderAccessBanner: View {
     }
 }
 
+// MARK: - External change banner (edit mode)
+
+struct ExternalChangeBanner: View {
+    @ObservedObject var model: ReaderModel
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .foregroundStyle(.secondary)
+            Text("This file changed on disk.")
+                .font(.callout)
+            Button("Use Disk Version") { model.adoptDiskVersion() }
+                .controlSize(.small)
+            Button("Keep Mine") { model.keepMineDismissDisk() }
+                .controlSize(.small)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.regularMaterial, in: Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
+    }
+}
+
 // MARK: - Live indicator
 
 struct LiveDot: View {
@@ -215,24 +293,52 @@ struct LiveDot: View {
 
 struct AppearancePopover: View {
     @ObservedObject var model: ReaderModel
-    @AppStorage(SettingsKeys.appearance) private var appearance = Appearance.system.rawValue
-    @AppStorage(SettingsKeys.typeface) private var typeface = Typeface.standard.rawValue
+    @AppStorage(SettingsKeys.theme) private var themeID = "thesis"
+    @AppStorage(SettingsKeys.mode) private var mode = AppearanceMode.system.rawValue
     @AppStorage(SettingsKeys.measure) private var measure = Measure.normal.rawValue
     @AppStorage(SettingsKeys.textScale) private var textScale = 1.0
 
+    private var currentTheme: GalleyTheme { ThemeStore.theme(id: themeID) }
+
+    /// Which palette variant (light/dark) is on screen right now, resolving
+    /// "System" against the app's effective appearance — drives the swatch
+    /// chips so they always show the theme as it actually looks.
+    private var variant: ThemeStore.Variant {
+        switch AppearanceMode(rawValue: mode) ?? .system {
+        case .light: return .light
+        case .dark: return .dark
+        case .system:
+            let dark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            return dark ? .dark : .light
+        }
+    }
+
+    private var spectralBinding: Binding<Bool> {
+        Binding(
+            get: { ThemeStore.overrides(for: themeID).spectral ?? currentTheme.spectral },
+            set: { newValue in
+                var overrides = ThemeStore.overrides(for: themeID)
+                overrides.spectral = newValue == currentTheme.spectral ? nil : newValue
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Picker("Theme", selection: $appearance) {
-                ForEach(Appearance.allCases) { a in
-                    Text(a.label).tag(a.rawValue)
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(ThemeStore.builtIns) { theme in
+                    ThemeRow(theme: theme, isSelected: theme.id == themeID, variant: variant) {
+                        themeID = theme.id
+                    }
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
 
-            Picker("Typeface", selection: $typeface) {
-                ForEach(Typeface.allCases) { t in
-                    Text(t.label).tag(t.rawValue)
+            Divider()
+
+            Picker("Mode", selection: $mode) {
+                ForEach(AppearanceMode.allCases) { m in
+                    Text(m.label).tag(m.rawValue)
                 }
             }
             .pickerStyle(.segmented)
@@ -256,9 +362,66 @@ struct AppearancePopover: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+
+            Toggle("Spectral accents", isOn: spectralBinding)
+                .toggleStyle(.switch)
         }
         .padding(16)
-        .frame(width: 280)
+        .frame(width: 300)
+    }
+}
+
+/// One theme choice: name + blurb + a 3-swatch chip (bg / ink / accent) for
+/// the variant currently on screen. Shared by the popover and Settings.
+struct ThemeRow: View {
+    let theme: GalleyTheme
+    let isSelected: Bool
+    let variant: ThemeStore.Variant
+    let action: () -> Void
+
+    private var palette: ThemePalette {
+        ThemeStore.resolved(theme: theme, variant: variant).palette
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                swatch
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(theme.name).font(.callout.weight(.medium))
+                    Text(theme.blurb)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 5)
+            .padding(.horizontal, 6)
+            .background(isSelected ? Color.primary.opacity(0.06) : .clear, in: RoundedRectangle(cornerRadius: 8))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var swatch: some View {
+        HStack(spacing: 2) {
+            chip(palette.bg)
+            chip(palette.ink)
+            chip(palette.accent)
+        }
+    }
+
+    private func chip(_ hex: String) -> some View {
+        RoundedRectangle(cornerRadius: 3)
+            .fill(Color(hex: hex) ?? .gray)
+            .frame(width: 10, height: 20)
+            .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.primary.opacity(0.08)))
     }
 }
 

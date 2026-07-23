@@ -32,16 +32,33 @@ final class ReaderModel: NSObject, ObservableObject {
     @Published var zoomSteps = 0
     @Published var isWatching = false
 
+    // Edit mode
+    @Published var isEditing = false
+    @Published var draftText = "" {
+        didSet { isDirty = draftText != markdown }
+    }
+    // Deliberately NOT mirrored into window.isDocumentEdited: in a
+    // DocumentGroup app that flag belongs to NSDocument, which would try to
+    // autosave our read-only document and complain. WindowCloseGuard covers
+    // the close-with-unsaved-changes case instead.
+    @Published var isDirty = false
+    @Published var externalChangePending = false
+
     let fileURL: URL?
     private(set) var markdown: String
 
     weak var webView: WKWebView?
+    /// Set by MarkdownEditorView while it's alive; used to route Find… into
+    /// the text view's own find bar while editing.
+    weak var editorTextView: NSTextView?
     let schemeHandler = DocAssetSchemeHandler()
 
     private var webReady = false
     private var watcher: FileWatcher?
     private var defaultsObserver: AnyCancellable?
     private var fullScreenObservers: [NSObjectProtocol] = []
+    private var windowCloseGuard: WindowCloseGuard?
+    private var window: NSWindow? { webView?.window }
 
     init(text: String, fileURL: URL?) {
         self.markdown = text
@@ -86,14 +103,36 @@ final class ReaderModel: NSObject, ObservableObject {
         saveScrollPosition()
         for o in fullScreenObservers { NotificationCenter.default.removeObserver(o) }
         fullScreenObservers = []
+        if let o = windowKeyObserver { NotificationCenter.default.removeObserver(o) }
+        windowKeyObserver = nil
         DistributedNotificationCenter.default().removeObserver(self)
+        ActiveModelTracker.shared.resign(self)
     }
 
     // MARK: - Web lifecycle
 
+    private var windowKeyObserver: NSObjectProtocol?
+
     func attach(webView: WKWebView) {
         self.webView = webView
         observeFullScreen(of: webView)
+        // Claim menu currency only when this window is actually key (or
+        // nothing holds it yet) — a window restored in the background must
+        // not steal commands from the document the user is looking at.
+        if ActiveModelTracker.shared.current == nil || webView.window?.isKeyWindow == true {
+            ActiveModelTracker.shared.adopt(self)
+        }
+        if windowKeyObserver == nil {
+            windowKeyObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main
+            ) { [weak self] note in
+                Task { @MainActor in
+                    guard let self, let window = self.webView?.window,
+                          (note.object as? NSWindow) === window else { return }
+                    ActiveModelTracker.shared.adopt(self)
+                }
+            }
+        }
     }
 
     func handleWebReady() {
@@ -125,23 +164,33 @@ final class ReaderModel: NSObject, ObservableObject {
         var typographer: Bool
     }
 
+    private struct FontsPayload: Encodable {
+        var display: String
+        var body: String
+        var mono: String
+    }
+
     private struct OptionsPayload: Encodable {
-        var appearance: String
-        var typeface: String
+        var mode: String
+        var palette: ThemePalette
+        var fonts: FontsPayload
+        var headingWeight: Int
+        var spectral: Bool
         var measure: Int
         var scale: Double
         var allowRemote: Bool
         var presenting: Bool
     }
 
-    private func effectiveAppearance() -> String {
-        let pref = Appearance(rawValue: UserDefaults.standard.string(forKey: SettingsKeys.appearance) ?? "") ?? .system
+    /// Resolves "system" against the app's current effective appearance.
+    private func effectiveMode() -> String {
+        let pref = AppearanceMode(rawValue: UserDefaults.standard.string(forKey: SettingsKeys.mode) ?? "") ?? .system
         switch pref {
-        case .paper: return "paper"
-        case .ink: return "ink"
+        case .light: return "light"
+        case .dark: return "dark"
         case .system:
             let dark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            return dark ? "ink" : "paper"
+            return dark ? "dark" : "light"
         }
     }
 
@@ -150,30 +199,34 @@ final class ReaderModel: NSObject, ObservableObject {
         guard webReady else { return }
         let d = UserDefaults.standard
         let scale = d.double(forKey: SettingsKeys.textScale) * pow(1.1, Double(zoomSteps))
+        let mode = effectiveMode()
+        let theme = ThemeStore.current()
+        let resolved = ThemeStore.resolved(theme: theme, variant: mode == "dark" ? .dark : .light)
         let payload = OptionsPayload(
-            appearance: effectiveAppearance(),
-            typeface: d.string(forKey: SettingsKeys.typeface) ?? "default",
+            mode: mode,
+            palette: resolved.palette,
+            fonts: FontsPayload(display: resolved.displayFont.css, body: resolved.bodyFont.css, mono: resolved.monoFont.css),
+            headingWeight: resolved.headingWeight,
+            spectral: resolved.spectral,
             measure: d.integer(forKey: SettingsKeys.measure),
             scale: min(max(scale, 0.55), 3.0),
             allowRemote: d.bool(forKey: SettingsKeys.allowRemote),
             presenting: presenting
         )
         js("Reader.applyOptions(\(Self.jsonString(payload)))")
-        webView?.underPageBackgroundColor = payload.appearance == "ink"
-            ? NSColor(red: 0.090, green: 0.086, blue: 0.059, alpha: 1)
-            : NSColor(red: 0.945, green: 0.925, blue: 0.886, alpha: 1)
+        webView?.underPageBackgroundColor = NSColor(hex: resolved.palette.bg) ?? NSColor(red: 0.945, green: 0.925, blue: 0.886, alpha: 1)
         applyRemotePolicy(allowRemote: payload.allowRemote)
         applyWindowAppearance()
     }
 
     /// The app chrome (titlebar, sidebar, popovers) follows the reading theme,
-    /// so Ink never sits under a bright toolbar.
+    /// so a dark theme never sits under a bright toolbar.
     private func applyWindowAppearance() {
-        let pref = Appearance(rawValue: UserDefaults.standard.string(forKey: SettingsKeys.appearance) ?? "") ?? .system
+        let pref = AppearanceMode(rawValue: UserDefaults.standard.string(forKey: SettingsKeys.mode) ?? "") ?? .system
         switch pref {
         case .system: NSApp.appearance = nil
-        case .paper: NSApp.appearance = NSAppearance(named: .aqua)
-        case .ink: NSApp.appearance = NSAppearance(named: .darkAqua)
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
         }
     }
 
@@ -236,8 +289,137 @@ final class ReaderModel: NSObject, ObservableObject {
         guard let data = try? Data(contentsOf: url) else { return }
         let text = MarkdownDocument.decode(data)
         guard text != markdown else { return }
+        if isEditing {
+            if isDirty {
+                // Don't clobber unsaved edits — surface the conflict instead.
+                externalChangePending = true
+            } else {
+                markdown = text
+                draftText = text
+            }
+            return
+        }
         markdown = text
         pushContent(isReload: true)
+    }
+
+    // MARK: - Edit mode
+
+    /// Welcome/Tour and anything else read-only or unwritable stays view-only.
+    var canEdit: Bool {
+        guard let fileURL else { return false }
+        guard FileManager.default.isWritableFile(atPath: fileURL.path) else { return false }
+        guard !fileURL.path.hasPrefix(Bundle.main.bundleURL.path) else { return false }
+        return true
+    }
+
+    func enterEdit() {
+        guard canEdit, !isEditing else { return }
+        isEditing = true
+        draftText = markdown
+        externalChangePending = false
+        installWindowCloseGuard()
+    }
+
+    func saveDraft() {
+        guard let fileURL else { return }
+        do {
+            // In place, not atomic: an atomic rename swaps the inode, which
+            // NSDocument's proxy flags as an external "Edited" change.
+            try Data(draftText.utf8).write(to: fileURL, options: [])
+            markdown = draftText
+            isDirty = false
+            // Our write happens behind NSDocument's back; refresh its
+            // bookkeeping so the title proxy doesn't flag "Edited".
+            if let window, let document = NSDocumentController.shared.document(for: window) {
+                let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+                document.fileModificationDate = attrs?[.modificationDate] as? Date ?? Date()
+            }
+        } catch {
+            guard let window else { return }
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "Couldn't Save \u{201C}\(fileURL.lastPathComponent)\u{201D}"
+            alert.informativeText = error.localizedDescription
+            alert.addButton(withTitle: "OK")
+            alert.beginSheetModal(for: window)
+        }
+    }
+
+    func requestExitEdit() {
+        guard isEditing else { return }
+        guard isDirty else { finishExitingEdit(); return }
+        guard let window else { finishExitingEdit(); return }
+        presentUnsavedChangesAlert(in: window) { [weak self] in
+            self?.saveDraft()
+            self?.finishExitingEdit()
+        } onDiscard: { [weak self] in
+            guard let self else { return }
+            self.draftText = self.markdown
+            self.finishExitingEdit()
+        } onCancel: {}
+    }
+
+    func adoptDiskVersion() {
+        guard let fileURL, let data = try? Data(contentsOf: fileURL) else { return }
+        let text = MarkdownDocument.decode(data)
+        markdown = text
+        draftText = text
+        externalChangePending = false
+    }
+
+    func keepMineDismissDisk() {
+        externalChangePending = false
+    }
+
+    private func finishExitingEdit() {
+        isEditing = false
+        externalChangePending = false
+        uninstallWindowCloseGuard()
+        pushContent(isReload: true)
+    }
+
+    /// Shared by `requestExitEdit()` and `WindowCloseGuard` so the close-box
+    /// prompt and the ⌘⇧E prompt read identically.
+    fileprivate func presentUnsavedChangesAlert(
+        in window: NSWindow,
+        onSave: @escaping () -> Void,
+        onDiscard: @escaping () -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        let alert = NSAlert()
+        alert.messageText = "Save changes to \u{201C}\(fileURL?.lastPathComponent ?? "this document")\u{201D}?"
+        alert.informativeText = "Your changes will be lost if you don\u{2019}t save them."
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Discard Changes")
+        alert.addButton(withTitle: "Cancel")
+        alert.beginSheetModal(for: window) { response in
+            switch response {
+            case .alertFirstButtonReturn: onSave()
+            case .alertSecondButtonReturn: onDiscard()
+            default: onCancel()
+            }
+        }
+    }
+
+    /// Installed as `window.delegate` while editing so closing the window
+    /// with unsaved changes prompts instead of silently discarding them.
+    /// Restored on exit.
+    private func installWindowCloseGuard() {
+        guard let window, windowCloseGuard == nil else { return }
+        let guardDelegate = WindowCloseGuard()
+        guardDelegate.original = window.delegate
+        guardDelegate.model = self
+        window.delegate = guardDelegate
+        windowCloseGuard = guardDelegate
+    }
+
+    fileprivate func uninstallWindowCloseGuard() {
+        guard let window, let guardDelegate = windowCloseGuard else { return }
+        if window.delegate === guardDelegate {
+            window.delegate = guardDelegate.original
+        }
+        windowCloseGuard = nil
     }
 
     // MARK: - Bridge messages from JS
@@ -514,5 +696,69 @@ final class ReaderModel: NSObject, ObservableObject {
         } else {
             pushContent(isReload: true)
         }
+    }
+}
+
+/// Stands in for the document window's real delegate while edit mode is
+/// active, so an unsaved close attempt gets the Save/Discard/Cancel prompt
+/// instead of silently losing the draft. Forwards every other delegate call
+/// straight through to `original` via `forwardingTarget(for:)`.
+final class WindowCloseGuard: NSObject, NSWindowDelegate {
+    weak var original: NSWindowDelegate?
+    weak var model: ReaderModel?
+
+    override func responds(to aSelector: Selector!) -> Bool {
+        super.responds(to: aSelector) || (original?.responds(to: aSelector) == true)
+    }
+
+    override func forwardingTarget(for aSelector: Selector!) -> Any? {
+        guard let original, original.responds(to: aSelector) else { return nil }
+        return original
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard let model, model.isEditing, model.isDirty else {
+            return original?.windowShouldClose?(sender) ?? true
+        }
+        model.presentUnsavedChangesAlert(in: sender) {
+            model.saveDraft()
+            model.isEditing = false
+            model.uninstallWindowCloseGuard()
+            sender.close()
+        } onDiscard: {
+            model.draftText = model.markdown
+            model.isEditing = false
+            model.uninstallWindowCloseGuard()
+            sender.close()
+        } onCancel: {}
+        return false
+    }
+}
+
+/// The frontmost document's model, tracked via AppKit window-key events.
+/// Menu commands read this instead of @FocusedValue, which goes nil whenever
+/// an AppKit view (the markdown editor's NSTextView) holds first responder.
+/// Forwards the current model's objectWillChange so menu item state stays live.
+@MainActor
+final class ActiveModelTracker: ObservableObject {
+    static let shared = ActiveModelTracker()
+
+    private(set) weak var current: ReaderModel? {
+        willSet { objectWillChange.send() }
+    }
+    private var forwarder: AnyCancellable?
+
+    func adopt(_ model: ReaderModel) {
+        guard current !== model else { return }
+        current = model
+        forwarder = model.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+
+    func resign(_ model: ReaderModel) {
+        guard current === model else { return }
+        current = nil
+        forwarder = nil
     }
 }

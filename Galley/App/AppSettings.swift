@@ -1,29 +1,13 @@
 import SwiftUI
 
-enum Appearance: String, CaseIterable, Identifiable {
-    case system, paper, ink
+enum AppearanceMode: String, CaseIterable, Identifiable {
+    case system, light, dark
     var id: String { rawValue }
     var label: String {
         switch self {
         case .system: "System"
-        case .paper: "Paper"
-        case .ink: "Ink"
-        }
-    }
-}
-
-enum Typeface: String, CaseIterable, Identifiable {
-    case standard = "default"
-    case serif
-    case mono
-    case system
-    var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .standard: "Galley"
-        case .serif: "Serif"
-        case .mono: "Mono"
-        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
         }
     }
 }
@@ -55,8 +39,8 @@ enum FrontMatterDisplay: String, CaseIterable, Identifiable {
 
 /// App-wide reading defaults. Per-window zoom layers on top of `textScale`.
 enum SettingsKeys {
-    static let appearance = "galley.appearance"
-    static let typeface = "galley.typeface"
+    static let theme = "galley.theme"
+    static let mode = "galley.mode"
     static let textScale = "galley.textScale"
     static let measure = "galley.measure"
     static let liveReload = "galley.liveReload"
@@ -69,9 +53,10 @@ enum SettingsKeys {
 
 extension UserDefaults {
     static func registerGalleyDefaults() {
+        migrateLegacyAppearance()
         UserDefaults.standard.register(defaults: [
-            SettingsKeys.appearance: Appearance.system.rawValue,
-            SettingsKeys.typeface: Typeface.standard.rawValue,
+            SettingsKeys.theme: "thesis",
+            SettingsKeys.mode: AppearanceMode.system.rawValue,
             SettingsKeys.textScale: 1.0,
             SettingsKeys.measure: Measure.normal.rawValue,
             SettingsKeys.liveReload: true,
@@ -81,5 +66,19 @@ extension UserDefaults {
             SettingsKeys.frontMatter: FrontMatterDisplay.card.rawValue,
             SettingsKeys.allowRemote: true,
         ])
+    }
+
+    /// One-shot migration from the old "galley.appearance" (system/paper/ink)
+    /// setting to "galley.mode" (system/light/dark). Silent — runs once,
+    /// since the old key is removed afterward.
+    private static func migrateLegacyAppearance() {
+        let d = UserDefaults.standard
+        guard let old = d.string(forKey: "galley.appearance") else { return }
+        switch old {
+        case "paper": d.set(AppearanceMode.light.rawValue, forKey: SettingsKeys.mode)
+        case "ink": d.set(AppearanceMode.dark.rawValue, forKey: SettingsKeys.mode)
+        default: break // "system" needs no translation
+        }
+        d.removeObject(forKey: "galley.appearance")
     }
 }

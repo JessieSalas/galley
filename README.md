@@ -32,8 +32,18 @@ the opposite bet: **read-only is the entire product.**
 - **It's a real Mac citizen.** Document-based, sandboxed, Quick Look extension
   for Space-bar previews, Open Recent, per-document scroll memory, PDF/HTML
   export, print that actually looks right.
-- **It refuses the rest.** No editing, no vault, no account, no sync, no
-  subscription, no telemetry. Free and MIT-licensed.
+- **Five real themes, each with light and dark.** Thesis (warm paper and ink),
+  Manuscript (bookish serif), Studio (clean neutral), Terminal (all mono), and
+  Editorial (high-contrast headline red) — plus per-theme customization of
+  fonts, heading weight, colors, and the spectral accents (on by default only
+  in Thesis; toggleable everywhere).
+- **Editing is a mode, not a default.** Every document opens read-only, every
+  time. When you need to fix a typo, `⌘⇧E` enters a deliberate source-editing
+  mode — syntax-highlighted Markdown, undo, find, explicit `⌘S` save — and
+  unsaved changes are guarded on close. There is never a cursor waiting to
+  happen.
+- **It refuses the rest.** No vault, no account, no sync, no subscription,
+  no telemetry. Free and MIT-licensed.
 
 ## The design
 
@@ -71,6 +81,8 @@ file types behind your back either — it registers as an *alternate* handler.)
 
 | Key | Action |
 | --- | --- |
+| `⌘⇧E` | Edit Markdown (and back) |
+| `⌘S` | Save (while editing) |
 | `⌘F` / `⌘G` / `⌘⇧G` | Find, find next, find previous |
 | `⌃⌘S` | Toggle outline sidebar |
 | `⌘=` / `⌘−` / `⌘0` | Zoom |

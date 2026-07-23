@@ -56,30 +56,60 @@ private struct ReadingSettings: View {
 }
 
 private struct AppearanceSettings: View {
-    @AppStorage(SettingsKeys.appearance) private var appearance = Appearance.system.rawValue
-    @AppStorage(SettingsKeys.typeface) private var typeface = Typeface.standard.rawValue
+    @AppStorage(SettingsKeys.theme) private var themeID = "thesis"
+    @AppStorage(SettingsKeys.mode) private var mode = AppearanceMode.system.rawValue
     @AppStorage(SettingsKeys.textScale) private var textScale = 1.0
     @AppStorage(SettingsKeys.measure) private var measure = Measure.normal.rawValue
+
+    @State private var overrides = ThemeOverrides()
+
+    private var theme: GalleyTheme { ThemeStore.theme(id: themeID) }
+
+    private var variant: ThemeStore.Variant {
+        switch AppearanceMode(rawValue: mode) ?? .system {
+        case .light: return .light
+        case .dark: return .dark
+        case .system:
+            let dark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            return dark ? .dark : .light
+        }
+    }
 
     var body: some View {
         Form {
             Section {
-                Picker("Theme", selection: $appearance) {
-                    ForEach(Appearance.allCases) { a in
-                        Text(a.label).tag(a.rawValue)
+                ForEach(ThemeStore.builtIns) { t in
+                    ThemeRow(theme: t, isSelected: t.id == themeID, variant: variant) {
+                        themeID = t.id
+                    }
+                }
+                Picker("Mode", selection: $mode) {
+                    ForEach(AppearanceMode.allCases) { m in
+                        Text(m.label).tag(m.rawValue)
                     }
                 }
                 .pickerStyle(.segmented)
-                Text("Paper is warm cream and ink; Ink is a warm near-black. System follows your Mac.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
-            Section {
-                Picker("Typeface", selection: $typeface) {
-                    ForEach(Typeface.allCases) { t in
-                        Text(t.label).tag(t.rawValue)
-                    }
+
+            Section("Type") {
+                Picker("Display font", selection: displayFontBinding) {
+                    ForEach(FontChoice.allCases) { f in Text(f.label).tag(f) }
                 }
+                Picker("Body font", selection: bodyFontBinding) {
+                    ForEach(FontChoice.allCases) { f in Text(f.label).tag(f) }
+                }
+                Picker("Mono font", selection: monoFontBinding) {
+                    ForEach(FontChoice.allCases) { f in Text(f.label).tag(f) }
+                }
+                HStack {
+                    Text("Heading weight")
+                    Slider(value: headingWeightBinding, in: 500...800, step: 20)
+                    Text("\(Int(headingWeightBinding.wrappedValue))")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(width: 34, alignment: .trailing)
+                }
+                Toggle("Spectral accents", isOn: spectralBinding)
                 Slider(value: $textScale, in: 0.8...1.6, step: 0.05) {
                     Text("Text size")
                 } minimumValueLabel: {
@@ -94,9 +124,105 @@ private struct AppearanceSettings: View {
                 }
                 .pickerStyle(.segmented)
             }
+
+            Section("Light") {
+                ColorPicker("Background", selection: colorBinding(.light, { $0.bg }, { $0.bg = $1 }, { $0.bg }))
+                ColorPicker("Text", selection: colorBinding(.light, { $0.ink }, { $0.ink = $1 }, { $0.ink }))
+                ColorPicker("Accent", selection: colorBinding(.light, { $0.accent }, { $0.accent = $1 }, { $0.accent }))
+            }
+
+            Section("Dark") {
+                ColorPicker("Background", selection: colorBinding(.dark, { $0.bg }, { $0.bg = $1 }, { $0.bg }))
+                ColorPicker("Text", selection: colorBinding(.dark, { $0.ink }, { $0.ink = $1 }, { $0.ink }))
+                ColorPicker("Accent", selection: colorBinding(.dark, { $0.accent }, { $0.accent = $1 }, { $0.accent }))
+            }
+
+            Section {
+                Button("Reset This Theme") {
+                    overrides = ThemeOverrides()
+                    ThemeStore.setOverrides(overrides, for: themeID)
+                }
+            }
         }
         .formStyle(.grouped)
-        .frame(height: 340)
+        .frame(height: 620)
+        .onAppear { overrides = ThemeStore.overrides(for: themeID) }
+        .onChange(of: themeID) { _, newID in overrides = ThemeStore.overrides(for: newID) }
+    }
+
+    private var displayFontBinding: Binding<FontChoice> {
+        Binding(
+            get: { overrides.displayFont ?? theme.displayFont },
+            set: { newValue in
+                overrides.displayFont = newValue == theme.displayFont ? nil : newValue
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
+    }
+
+    private var bodyFontBinding: Binding<FontChoice> {
+        Binding(
+            get: { overrides.bodyFont ?? theme.bodyFont },
+            set: { newValue in
+                overrides.bodyFont = newValue == theme.bodyFont ? nil : newValue
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
+    }
+
+    private var monoFontBinding: Binding<FontChoice> {
+        Binding(
+            get: { overrides.monoFont ?? theme.monoFont },
+            set: { newValue in
+                overrides.monoFont = newValue == theme.monoFont ? nil : newValue
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
+    }
+
+    private var headingWeightBinding: Binding<Double> {
+        Binding(
+            get: { Double(overrides.headingWeight ?? theme.headingWeight) },
+            set: { newValue in
+                let intValue = Int(newValue)
+                overrides.headingWeight = intValue == theme.headingWeight ? nil : intValue
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
+    }
+
+    private var spectralBinding: Binding<Bool> {
+        Binding(
+            get: { overrides.spectral ?? theme.spectral },
+            set: { newValue in
+                overrides.spectral = newValue == theme.spectral ? nil : newValue
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
+    }
+
+    /// Builds a Color binding for one field (bg/ink/accent) of one variant's
+    /// PaletteOverride, falling back to the built-in theme's value when unset.
+    private func colorBinding(
+        _ variant: ThemeStore.Variant,
+        _ get: @escaping (PaletteOverride) -> String?,
+        _ set: @escaping (inout PaletteOverride, String) -> Void,
+        _ defaultHex: @escaping (ThemePalette) -> String
+    ) -> Binding<Color> {
+        Binding(
+            get: {
+                let po = variant == .light ? overrides.light : overrides.dark
+                let base = variant == .light ? theme.light : theme.dark
+                let hex = po.flatMap(get) ?? defaultHex(base)
+                return Color(hex: hex) ?? .black
+            },
+            set: { newColor in
+                var po = (variant == .light ? overrides.light : overrides.dark) ?? PaletteOverride()
+                set(&po, newColor.toHex())
+                if variant == .light { overrides.light = po } else { overrides.dark = po }
+                ThemeStore.setOverrides(overrides, for: themeID)
+            }
+        )
     }
 }
 

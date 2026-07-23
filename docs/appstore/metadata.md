@@ -42,7 +42,10 @@ MADE FOR THE AI ERA
 • Recognizes CLAUDE.md, AGENTS.md, and friends
 
 A REAL MAC APP
-• Paper and Ink themes; four typefaces; adjustable measure
+• Five themes — Thesis, Manuscript, Studio, Terminal, Editorial — each with
+  its own light and dark, customizable fonts and colors
+• A deliberate edit mode (⌘⇧E) for quick fixes: syntax-highlighted source,
+  undo, explicit save — documents still always OPEN read-only
 • Outline sidebar, find, presentation mode
 • Quick Look: press Space in Finder for the same typeset preview
 • Export PDF or HTML, print properly

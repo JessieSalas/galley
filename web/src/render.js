@@ -26,8 +26,11 @@ const CALLOUT_KINDS = ["note", "tip", "important", "warning", "caution"];
 const state = {
   docDir: null, // absolute dir of the open file, for relative asset resolution
   options: {
-    appearance: "paper", // paper | ink
-    typeface: "default", // default | serif | mono | system
+    mode: "light", // light | dark (native resolves "system" before sending)
+    palette: {}, // ThemePalette fields, set by the native side
+    fonts: {}, // { display, body, mono } CSS font-family stacks
+    headingWeight: 600,
+    spectral: true,
     measure: 70, // ch
     scale: 1.0,
     leading: 1.68,
@@ -308,7 +311,7 @@ function loadStylesheet(href) {
 function mermaidThemeVariables() {
   const css = getComputedStyle(document.documentElement);
   const v = (name) => css.getPropertyValue(name).trim();
-  const dark = document.documentElement.dataset.appearance === "ink";
+  const dark = document.documentElement.dataset.mode === "dark";
   return {
     fontFamily: v("--font-body") || "Inter, sans-serif",
     fontSize: "14.5px",
@@ -643,20 +646,53 @@ const Reader = {
   },
 
   applyOptions(opts) {
-    const prevAppearance = state.options.appearance;
+    const prevBg = state.options.palette && state.options.palette.bg;
     const prevRemote = state.options.allowRemote;
+    // shallow-merge nested objects too, so a partial `applyOptions({ presenting: true })`
+    // call (as the dev harness does) doesn't blow away the current palette/fonts.
+    if (opts.palette) opts.palette = { ...state.options.palette, ...opts.palette };
+    if (opts.fonts) opts.fonts = { ...state.options.fonts, ...opts.fonts };
     Object.assign(state.options, opts);
+
     const rootEl = document.documentElement;
-    rootEl.dataset.appearance = state.options.appearance;
-    rootEl.dataset.typeface = state.options.typeface;
+    const setVar = (name, value) => {
+      if (value !== undefined && value !== null) rootEl.style.setProperty(name, value);
+    };
+    const p = state.options.palette || {};
+    setVar("--bg", p.bg);
+    setVar("--bg-hi", p.bgHi);
+    setVar("--bg-deep", p.bgDeep);
+    setVar("--ink", p.ink);
+    setVar("--ink-2", p.ink2);
+    setVar("--ink-3", p.ink3);
+    setVar("--muted", p.muted);
+    setVar("--line", p.line);
+    setVar("--line-strong", p.lineStrong);
+    setVar("--accent", p.accent);
+    setVar("--live", p.live);
+    setVar("--syn-red", p.synRed);
+    setVar("--syn-amber", p.synAmber);
+    setVar("--syn-teal", p.synTeal);
+    setVar("--syn-blue", p.synBlue);
+    setVar("--syn-purple", p.synPurple);
+    setVar("--syn-comment", p.synComment);
+
+    const fonts = state.options.fonts || {};
+    setVar("--font-display", fonts.display);
+    setVar("--font-body", fonts.body);
+    setVar("--font-mono", fonts.mono);
+    setVar("--heading-weight", state.options.headingWeight);
+
+    rootEl.dataset.mode = state.options.mode;
+    rootEl.dataset.spectral = String(!!state.options.spectral);
     rootEl.dataset.presenting = String(!!state.options.presenting);
     rootEl.style.setProperty("--measure", state.options.measure + "ch");
     rootEl.style.setProperty("--scale", String(state.options.scale));
     rootEl.style.setProperty("--leading", String(state.options.leading));
 
-    // re-theme mermaid diagrams on appearance change
+    // re-theme mermaid diagrams when the palette actually changes color
     if (
-      prevAppearance !== state.options.appearance &&
+      prevBg !== p.bg &&
       state.mermaidLoaded &&
       document.querySelector(".mermaid-block")
     ) {

@@ -183,6 +183,27 @@ Full multi-agent research runs behind this doc. Key verified findings:
   trust/taste position empty
 - All bundled libraries are MIT/BSD; versions pinned and verified against npm/GitHub
 
+## v1.1 addendum — themes and the edit-mode decision
+
+**Themes.** One brand theme became a theme *system*: five built-ins (Thesis,
+Manuscript, Studio, Terminal, Editorial), each defining a light and a dark
+palette, typography (display/body/mono, heading weight), and whether the
+spectral accents appear (Thesis only, by default). Users can customize fonts,
+heading weight, background/text/accent per variant, and toggle the spectral
+accents per theme — overrides layer on the built-in and reset cleanly. The
+engine is CSS-custom-property based: Swift resolves theme + overrides + mode
+into a palette payload; the web layer applies it as variables.
+
+**Edit mode.** The moat survives contact with reality this way: Galley still
+*opens* read-only, always — but `⌘⇧E` enters a deliberate, explicit edit mode
+(syntax-highlighted Markdown source in the theme's mono, undo, find, explicit
+`⌘S` atomic save, dirty-close guard, disk-conflict banner). The distinction
+that matters isn't "can it edit" but "can it edit *by accident*" — a viewer
+you must consciously switch into edit mode can still never mangle a file
+during a screen share, and never greets you with a cursor. Editors-as-viewers
+fail because editing is the default state; Galley keeps reading as the default
+state, permanently.
+
 ## Roadmap (post-v1)
 
 - Folder as a browsable set (sidebar file tree, relative-link navigation between docs)

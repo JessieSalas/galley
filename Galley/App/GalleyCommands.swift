@@ -11,22 +11,69 @@ extension FocusedValues {
     }
 }
 
+/// Menu items whose title/enabled state track the frontmost model's
+/// @Published values. Two traps live here: @FocusedValue goes nil while the
+/// editor's NSTextView holds first responder, and Commands never re-evaluate
+/// when a model publishes. ActiveModelTracker solves both — AppKit-driven
+/// currency, with the model's objectWillChange forwarded through.
+private struct SaveMenuItem: View {
+    @ObservedObject var tracker = ActiveModelTracker.shared
+    var body: some View {
+        Button("Save") { tracker.current?.saveDraft() }
+            .keyboardShortcut("s", modifiers: .command)
+            .disabled(!(tracker.current?.isEditing == true && tracker.current?.isDirty == true))
+    }
+}
+
+private struct EditToggleMenuItem: View {
+    @ObservedObject var tracker = ActiveModelTracker.shared
+    var body: some View {
+        Button(tracker.current?.isEditing == true ? "Done Editing" : "Edit Markdown") {
+            guard let model = tracker.current else { return }
+            model.isEditing ? model.requestExitEdit() : model.enterEdit()
+        }
+        .keyboardShortcut("e", modifiers: [.command, .shift])
+        .disabled(tracker.current?.canEdit != true)
+    }
+}
+
+private struct PresentToggleMenuItem: View {
+    @ObservedObject var tracker = ActiveModelTracker.shared
+    var body: some View {
+        Button(tracker.current?.presenting == true ? "Exit Presentation" : "Present") {
+            tracker.current?.togglePresentation()
+        }
+        .keyboardShortcut("p", modifiers: [.command, .shift])
+        .disabled(tracker.current == nil)
+    }
+}
+
 struct GalleyCommands: Commands {
-    @FocusedValue(\.readerModel) private var model
-    @AppStorage(SettingsKeys.appearance) private var appearance = Appearance.system.rawValue
-    @AppStorage(SettingsKeys.typeface) private var typeface = Typeface.standard.rawValue
+    @AppStorage(SettingsKeys.theme) private var themeID = "thesis"
+    @AppStorage(SettingsKeys.mode) private var mode = AppearanceMode.system.rawValue
     @AppStorage(SettingsKeys.measure) private var measure = Measure.normal.rawValue
+    /// Observed so plain items' disabled states refresh as windows come and go.
+    @ObservedObject private var tracker = ActiveModelTracker.shared
+
+    /// Read at action time, never captured — always the frontmost document.
+    private var model: ReaderModel? { tracker.current }
 
     var body: some Commands {
-        // Viewer: no "New Document".
-        CommandGroup(replacing: .newItem) {
-            Button("Open…") {
-                NSDocumentController.shared.openDocument(nil)
-            }
-            .keyboardShortcut("o", modifiers: .command)
-        }
+        // Viewer: no "New Document"; the system supplies Open/Open Recent.
+        CommandGroup(replacing: .newItem) {}
 
         CommandGroup(replacing: .saveItem) {
+            // Replacing this group drops the system Close item — restore it,
+            // routed through performClose so the dirty-edit guard still runs.
+            Button("Close") {
+                NSApp.keyWindow?.performClose(nil)
+            }
+            .keyboardShortcut("w", modifiers: .command)
+
+            SaveMenuItem()
+
+            Divider()
+
             // ⌘E stays free: it's the system-wide "Use Selection for Find".
             Button("Export as PDF…") {
                 if let model { Exporter.exportPDF(model: model) }
@@ -51,6 +98,8 @@ struct GalleyCommands: Commands {
 
         CommandGroup(after: .pasteboard) {
             Divider()
+            EditToggleMenuItem()
+            Divider()
             Button("Copy Markdown") { model?.copyMarkdown() }
                 .keyboardShortcut("c", modifiers: [.command, .shift])
                 .disabled(model == nil)
@@ -61,19 +110,34 @@ struct GalleyCommands: Commands {
                 .disabled(model == nil)
             Divider()
             Button("Find…") {
-                model?.findBarVisible = true
+                guard let model else { return }
+                if model.isEditing {
+                    model.editorTextView?.performFindAction(.showFindInterface)
+                } else {
+                    model.findBarVisible = true
+                }
             }
             .keyboardShortcut("f", modifiers: .command)
             .disabled(model == nil)
             Button("Find Next") {
-                if let model {
-                    if model.findBarVisible { model.find(forward: true) } else { model.findBarVisible = true }
+                guard let model else { return }
+                if model.isEditing {
+                    model.editorTextView?.performFindAction(.nextMatch)
+                } else if model.findBarVisible {
+                    model.find(forward: true)
+                } else {
+                    model.findBarVisible = true
                 }
             }
             .keyboardShortcut("g", modifiers: .command)
             .disabled(model == nil)
             Button("Find Previous") {
-                model?.find(forward: false)
+                guard let model else { return }
+                if model.isEditing {
+                    model.editorTextView?.performFindAction(.previousMatch)
+                } else {
+                    model.find(forward: false)
+                }
             }
             .keyboardShortcut("g", modifiers: [.command, .shift])
             .disabled(model == nil)
@@ -92,14 +156,14 @@ struct GalleyCommands: Commands {
 
             Divider()
 
-            Picker("Theme", selection: $appearance) {
-                ForEach(Appearance.allCases) { a in
-                    Text(a.label).tag(a.rawValue)
+            Picker("Theme", selection: $themeID) {
+                ForEach(ThemeStore.builtIns) { t in
+                    Text(t.name).tag(t.id)
                 }
             }
-            Picker("Typeface", selection: $typeface) {
-                ForEach(Typeface.allCases) { t in
-                    Text(t.label).tag(t.rawValue)
+            Picker("Mode", selection: $mode) {
+                ForEach(AppearanceMode.allCases) { m in
+                    Text(m.label).tag(m.rawValue)
                 }
             }
             Picker("Line Width", selection: $measure) {
@@ -114,11 +178,7 @@ struct GalleyCommands: Commands {
                 .keyboardShortcut("r", modifiers: .command)
                 .disabled(model == nil)
 
-            Button(model?.presenting == true ? "Exit Presentation" : "Present") {
-                model?.togglePresentation()
-            }
-            .keyboardShortcut("p", modifiers: [.command, .shift])
-            .disabled(model == nil)
+            PresentToggleMenuItem()
         }
 
         CommandGroup(replacing: .help) {
