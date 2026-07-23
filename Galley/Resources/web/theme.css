@@ -276,17 +276,23 @@ body {
 .doc li::marker { color: var(--muted); }
 .doc ul ul, .doc ol ol, .doc ul ol, .doc ol ul { margin-bottom: 0; }
 
-/* task lists */
-.doc li.task-list-item {
+/* task lists — plugin emits <li><label><input> text</label></li> */
+.doc ul.contains-task-list {
   list-style: none;
-  margin-left: -1.5em;
-  padding-left: 0;
+  padding-left: 0.2em;
+}
+.doc li.task-list-item {
+  margin: 0.3em 0;
+}
+.doc li.task-list-item > label {
   display: flex;
   align-items: baseline;
   gap: 0.6em;
+  cursor: default;
 }
-.doc li.task-list-item > input[type="checkbox"] {
+.doc input.task-list-item-checkbox {
   appearance: none;
+  -webkit-appearance: none;
   width: 0.95em;
   height: 0.95em;
   flex: 0 0 auto;
@@ -297,19 +303,18 @@ body {
   position: relative;
   margin: 0;
 }
-.doc li.task-list-item > input[type="checkbox"]:checked {
+.doc input.task-list-item-checkbox:checked {
   background: var(--ink);
   border-color: var(--ink);
 }
-.doc li.task-list-item > input[type="checkbox"]:checked::after {
+.doc input.task-list-item-checkbox:checked::after {
   content: "";
   position: absolute;
   inset: 0;
   background: var(--bg-hi);
   clip-path: polygon(18% 46%, 40% 66%, 82% 22%, 92% 32%, 40% 84%, 8% 56%);
 }
-.doc li.task-list-item > input[type="checkbox"]:checked + * ,
-.doc li.task-list-item.checked > .task-text {
+.doc li.task-list-item > label:has(input:checked) {
   color: var(--muted);
 }
 

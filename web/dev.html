@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reader — dev harness</title>
-<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="../Galley/Resources/web/theme.css">
 <style>
   #devbar {
     position: fixed; top: 10px; right: 10px; z-index: 999;
@@ -154,7 +154,7 @@ Footnotes tuck away politely[^1], and a second one for good measure[^2].
 After the fold, long documents should stay fast and legible. The reader keeps your scroll position on live reload, follows the tail when an agent is still writing, and never asks you to configure anything first.
 </script>
 
-<script src="reader.bundle.js"></script>
+<script src="../Galley/Resources/web/reader.bundle.js"></script>
 <script>
   Reader.load({ markdown: document.getElementById("sample").textContent });
 </script>

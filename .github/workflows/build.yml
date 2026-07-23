@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          xcodebuild -project Galley.xcodeproj -scheme Galley \
+            -configuration Release -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=NO build
+
+      - name: Verify web bundles are in sync
+        run: |
+          cd web
+          npm install --no-audit --no-fund
+          npx esbuild src/render.js --bundle --minify --format=iife --outfile=/tmp/reader.check.js
+          npx esbuild src/ql.js --bundle --minify --format=iife --outfile=/tmp/ql.check.js
+          cmp /tmp/reader.check.js ../Galley/Resources/web/reader.bundle.js || \
+            (echo "::error::web/src changed but committed reader.bundle.js was not rebuilt — run web/build.sh" && exit 1)
+          cmp /tmp/ql.check.js ../QuickLook/Resources/ql.bundle.js || \
+            (echo "::error::web/src changed but committed ql.bundle.js was not rebuilt — run web/build.sh" && exit 1)

@@ -45,11 +45,9 @@ private struct ReadingSettings: View {
             Section("Default Markdown app") {
                 Text("To make Galley open every Markdown file: select any .md file in Finder, press ⌘I, choose Galley under “Open with,” then click **Change All**.")
                     .font(.callout)
-                Button("Show a Markdown File in Finder…") {
-                    NSWorkspace.shared.activateFileViewerSelecting([])
-                    NSWorkspace.shared.open(URL(fileURLWithPath: NSHomeDirectory()))
-                }
-                .controlSize(.small)
+                Text("macOS doesn't let sandboxed apps change this on your behalf — and Galley wouldn't grab it behind your back anyway.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

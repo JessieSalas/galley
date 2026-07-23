@@ -163,7 +163,8 @@ function resolveAssetURL(src) {
 /* ---------------- front matter ---------------- */
 
 function splitFrontMatter(text) {
-  const m = /^﻿?---[ \t]*\n([\s\S]*?)\n---[ \t]*(\n|$)/.exec(text);
+  // tolerate a BOM and CRLF line endings (Windows-authored files)
+  const m = /^﻿?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?(\n|$)/.exec(text);
   if (!m) return { fm: null, body: text };
   try {
     const fm = yaml.load(m[1], { schema: yaml.JSON_SCHEMA });
@@ -347,9 +348,12 @@ async function renderMermaidBlocks(root) {
 }
 
 async function renderMath(root) {
-  const hasDollar = /\$[^\s$]/.test(state.raw) || /\$\$/.test(state.raw);
+  // A document is "mathy" only if it uses display math or TeX commands —
+  // this keeps "$5 and $10" prose from turning into accidental equations.
+  const mathy = /\$\$|\\\(|\\\[|\\begin\{/.test(state.raw);
+  const hasDollar = mathy && /\$[^\s$]/.test(state.raw);
   const mathBlocks = root.querySelectorAll(".math-block[data-math]");
-  if (!hasDollar && !mathBlocks.length) return;
+  if (!mathy && !mathBlocks.length) return;
 
   if (!state.katexLoaded) {
     await loadStylesheet("vendor/katex/katex.min.css");
@@ -367,14 +371,15 @@ async function renderMath(root) {
     }
   }
 
-  if (hasDollar && window.renderMathInElement) {
+  if (mathy && window.renderMathInElement) {
+    const delimiters = [
+      { left: "$$", right: "$$", display: true },
+      { left: "\\[", right: "\\]", display: true },
+      { left: "\\(", right: "\\)", display: false },
+    ];
+    if (hasDollar) delimiters.push({ left: "$", right: "$", display: false });
     window.renderMathInElement(root, {
-      delimiters: [
-        { left: "$$", right: "$$", display: true },
-        { left: "\\[", right: "\\]", display: true },
-        { left: "$", right: "$", display: false },
-        { left: "\\(", right: "\\)", display: false },
-      ],
+      delimiters,
       throwOnError: false,
       ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
     });

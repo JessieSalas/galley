@@ -37,7 +37,8 @@ const md = new MarkdownIt({
 md.linkify.set({ fuzzyLink: false });
 
 function stripFrontMatter(text) {
-  const m = /^﻿?---[ \t]*\n([\s\S]*?)\n---[ \t]*(\n|$)/.exec(text);
+  // tolerate a BOM and CRLF line endings (Windows-authored files)
+  const m = /^﻿?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?(\n|$)/.exec(text);
   if (!m) return { fmLines: null, body: text };
   return { fmLines: m[1], body: text.slice(m[0].length) };
 }
