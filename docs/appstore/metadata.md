@@ -57,7 +57,7 @@ Galley is free and open source, from Thesis Labs.
 markdown,md,reader,viewer,preview,mermaid,katex,readme,claude,agent,quick look,editor,github,notes
 
 ## Support URL
-https://github.com/thesis-labs/galley/issues
+https://github.com/JessieSalas/galley/issues
 
 ## Marketing URL
 https://thesis.do

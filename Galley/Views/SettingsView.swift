@@ -294,8 +294,8 @@ private struct AboutSettings: View {
             Divider().padding(.vertical, 4)
             HStack(spacing: 18) {
                 Link("Thesis Labs", destination: URL(string: "https://thesis.do")!)
-                Link("Source Code", destination: URL(string: "https://github.com/thesis-labs/galley")!)
-                Link("Acknowledgements", destination: URL(string: "https://github.com/thesis-labs/galley/blob/main/ACKNOWLEDGEMENTS.md")!)
+                Link("Source Code", destination: URL(string: "https://github.com/JessieSalas/galley")!)
+                Link("Acknowledgements", destination: URL(string: "https://github.com/JessieSalas/galley/blob/main/ACKNOWLEDGEMENTS.md")!)
             }
             .font(.callout)
             Text("Open source under the MIT license.\nSet in Bricolage Grotesque, Inter, and JetBrains Mono.")

@@ -191,7 +191,7 @@ struct GalleyCommands: Commands {
                 }
             }
             Divider()
-            Link("Galley on GitHub", destination: URL(string: "https://github.com/thesis-labs/galley")!)
+            Link("Galley on GitHub", destination: URL(string: "https://github.com/JessieSalas/galley")!)
             Link("Thesis Labs", destination: URL(string: "https://thesis.do")!)
         }
     }

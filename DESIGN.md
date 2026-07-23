@@ -214,7 +214,7 @@ state, permanently.
 
 ## Distribution
 
-- **Open source**: MIT, `github.com/thesis-labs/galley` (or user's org)
+- **Open source**: MIT, `github.com/JessieSalas/galley` (or user's org)
 - **Direct**: notarized DMG via `scripts/make-dmg.sh`
 - **Mac App Store**: "Galley — Markdown Reader", free; metadata in `docs/appstore/`
 - Claim the Homebrew cask name `galley` early — verified unclaimed

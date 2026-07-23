@@ -48,4 +48,4 @@ Galley reads the files you open, and that's the whole story.
 
 ---
 
-Made by [Thesis Labs](https://thesis.do) · Open source on [GitHub](https://github.com/thesis-labs/galley)
+Made by [Thesis Labs](https://thesis.do) · Open source on [GitHub](https://github.com/JessieSalas/galley)

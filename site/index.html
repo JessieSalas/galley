@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galley, the Markdown reader for the Mac</title>
+<meta name="description" content="Every Markdown file opens as a quiet, typeset page. Read-only by design, with a deliberate edit mode. Follows files your AI agents are still writing. Five themes, Mermaid, math, and zero telemetry. Free and open source.">
+<meta property="og:title" content="Galley, the Markdown reader for the Mac">
+<meta property="og:description" content="Every Markdown file opens as a quiet, typeset page. Read-only by design, with a deliberate edit mode. Free and open source.">
+<meta property="og:image" content="assets/hero.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  @font-face {
+    font-family: "Bricolage Grotesque Variable";
+    src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 200 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Inter Variable";
+    src: url("fonts/inter-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Inter Variable";
+    src: url("fonts/inter-latin-wght-italic.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "JetBrains Mono Variable";
+    src: url("fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2-variations");
+    font-weight: 100 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "JetBrains Mono Variable";
+    src: url("fonts/jetbrains-mono-latin-wght-italic.woff2") format("woff2-variations");
+    font-weight: 100 800;
+    font-style: italic;
+    font-display: swap;
+  }
+
+  :root {
+    --cream: #F1ECE2;
+    --cream-hi: #F8F5EE;
+    --ink: #15140E;
+    --ink-2: #4A4639;
+    --ink-3: #403C31;
+    --muted: #8E8879;
+    --line: #D9D3C6;
+    --line-strong: #C3BCAC;
+    --spectral: linear-gradient(90deg, #ff5d73, #ffb454, #36d6c3, #6aa6ff, #b07bff);
+    --maxw: 1200px;
+    --pad: clamp(1.25rem, 5vw, 4rem);
+    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --font-display: "Bricolage Grotesque Variable", ui-rounded, system-ui, sans-serif;
+    --font-body: "Inter Variable", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 0.6vw + 0.9rem, 1.12rem);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  ::selection { background: var(--ink); color: var(--cream-hi); }
+
+  .wrap {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-inline: var(--pad);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 1.7rem;
+    height: 1px;
+    background: var(--line-strong);
+    flex: 0 0 auto;
+  }
+
+  /* ---------- nav ---------- */
+
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.05rem var(--pad);
+    background: rgba(241, 236, 226, 0.72);
+    -webkit-backdrop-filter: saturate(140%) blur(16px);
+    backdrop-filter: saturate(140%) blur(16px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    user-select: none;
+  }
+
+  .brand img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+  }
+
+  .brand .word {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    font-size: 1.08rem;
+    color: var(--ink);
+  }
+
+  .brand .tag {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-left: 0.35rem;
+    padding-left: 0.7rem;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.7rem;
+  }
+
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    position: relative;
+    padding-block: 0.2rem;
+  }
+
+  .nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 1px;
+    width: 0;
+    background: var(--ink);
+    transition: width 0.35s var(--ease);
+  }
+
+  .nav-links a:hover { color: var(--ink); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* ---------- hero ---------- */
+
+  header.hero {
+    position: relative;
+    padding-top: 9.5rem;
+    padding-bottom: clamp(4rem, 9vh, 7rem);
+  }
+
+  .hero-copy { max-width: min(860px, 95vw); }
+
+  .hero .eyebrow { margin-bottom: 1.8rem; }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.6rem, 6.4vw, 5rem);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0;
+    max-width: 15ch;
+  }
+
+  .hero-accent {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-top: 1.7rem;
+  }
+
+  .spectral-line {
+    height: 1px;
+    width: 140px;
+    max-width: 40vw;
+    background: var(--spectral);
+    opacity: 0.85;
+  }
+
+  .lede {
+    margin: 2rem 0 0;
+    max-width: 58ch;
+    color: var(--ink-3);
+    font-weight: 500;
+    font-size: clamp(1.05rem, 0.5vw + 1rem, 1.28rem);
+    line-height: 1.6;
+  }
+
+  .lede + .lede { margin-top: 1.1rem; }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.1rem 1.7rem;
+    margin-top: 2.6rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 0.9rem 1.4rem;
+    border-radius: 999px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 10px 30px -18px rgba(60, 50, 30, 0.5);
+    transition: color 0.35s ease, background 0.35s ease, transform 0.35s var(--ease), box-shadow 0.35s ease;
+  }
+
+  .btn.ghost {
+    border-color: var(--line-strong);
+    color: var(--ink-2);
+    box-shadow: none;
+  }
+
+  .btn .arr { transition: transform 0.35s var(--ease); }
+
+  .btn:hover {
+    background: var(--ink);
+    color: var(--cream-hi);
+    transform: translateY(-1px);
+    box-shadow: 0 16px 34px -16px rgba(40, 30, 15, 0.55);
+  }
+
+  .btn:hover .arr { transform: translate(3px, -3px); }
+
+  .fine-print {
+    margin-top: 1.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  /* ---------- framed images ---------- */
+
+  .frame {
+    display: block;
+    width: 100%;
+    max-width: 1080px;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 30px 80px -40px rgba(60, 50, 30, 0.35);
+    margin: 0 auto;
+  }
+
+  .frame + .frame { margin-top: clamp(2rem, 5vh, 3.5rem); }
+
+  .shot-wrap { margin-top: clamp(3rem, 7vh, 5rem); }
+
+  /* ---------- sections ---------- */
+
+  main {
+    position: relative;
+    z-index: 1;
+  }
+
+  section {
+    padding-block: clamp(6rem, 13vh, 10rem);
+    border-top: 1px solid var(--line);
+  }
+
+  .section-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 8rem) 1fr;
+    gap: clamp(1.5rem, 5vw, 5.5rem);
+    align-items: start;
+  }
+
+  .statement {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2rem, 4.6vw, 3.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    max-width: 20ch;
+    margin: 0;
+  }
+
+  .body-col { max-width: 58ch; }
+
+  .body-col p {
+    color: var(--ink-2);
+    margin: 1.4rem 0 0;
+  }
+
+  .body-col p:first-child { margin-top: 0; }
+
+  .body-col.lead-in { margin-top: 2.2rem; }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    background: var(--cream-hi);
+    border-top: 1px solid var(--line);
+    padding-block: clamp(3.2rem, 7vh, 5rem);
+  }
+
+  .foot-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr 1fr;
+    gap: 2.2rem 2rem;
+  }
+
+  .foot-lockup {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .foot-lockup img {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+  }
+
+  .foot-lockup .word {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    font-size: 1.02rem;
+  }
+
+  .foot-brand p {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+    max-width: 38ch;
+    line-height: 1.75;
+  }
+
+  .foot-col h4 {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.1rem;
+    font-weight: 500;
+  }
+
+  .foot-col a {
+    display: block;
+    color: var(--ink-2);
+    font-size: 0.95rem;
+    padding: 0.32rem 0;
+    transition: color 0.25s ease;
+  }
+
+  .foot-col a:hover { color: var(--ink); }
+
+  .foot-bottom {
+    margin-top: clamp(2.2rem, 5vh, 3.6rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .foot-bottom a:hover { color: var(--ink); }
+
+  @media (max-width: 820px) {
+    .section-grid {
+      grid-template-columns: 1fr;
+      gap: 1.4rem;
+    }
+
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+
+    .foot-brand { grid-column: 1 / -1; }
+
+    .nav-links a.hide-sm { display: none; }
+  }
+
+  @media (max-width: 520px) {
+    .foot-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="#top" aria-label="Galley home">
+    <img src="assets/icon.png" alt="" width="20" height="20">
+    <span class="word">galley</span>
+    <span class="tag">BY THESIS LABS</span>
+  </a>
+  <div class="nav-links">
+    <a href="https://github.com/JessieSalas/galley" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <a class="hide-sm" href="https://thesis.do" target="_blank" rel="noopener noreferrer">Thesis Labs</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-copy">
+    <div class="eyebrow">GALLEY &middot; A READER FOR THE MAC</div>
+    <h1>Markdown, finally typeset.</h1>
+    <div class="hero-accent">
+      <span class="spectral-line" aria-hidden="true"></span>
+    </div>
+    <p class="lede">Double-click a Markdown file. Get a page, not a pane of source code.</p>
+    <p class="lede">In publishing, a galley is the typeset proof of a manuscript, printed plainly so it can simply be read. That is this app.</p>
+    <div class="actions">
+      <a class="btn" href="https://github.com/JessieSalas/galley/releases/latest" target="_blank" rel="noopener noreferrer">
+        Download for Mac <span class="arr">&#8599;</span>
+      </a>
+      <a class="btn ghost" href="https://github.com/JessieSalas/galley" target="_blank" rel="noopener noreferrer">
+        View source <span class="arr">&#8599;</span>
+      </a>
+    </div>
+    <p class="fine-print">Free. Open source. macOS 14+.</p>
+  </div>
+
+  <div class="wrap shot-wrap">
+    <img class="frame" src="assets/hero.png" alt="Galley showing a Markdown file rendered as a typeset page, front matter card at top, in the Thesis light theme" width="1440" height="900" loading="eager">
+  </div>
+</header>
+
+<main>
+  <section id="why">
+    <div class="wrap section-grid">
+      <div class="eyebrow">WHY</div>
+      <div>
+        <h2 class="statement">The paper of the AI age.</h2>
+        <div class="body-col lead-in">
+          <p>Markdown became the paper of the AI age. Agents write plans in it. Models answer in it. Your disk is filling with documents that were meant to be read. And the Mac still opens them as raw text in the wrong app. Galley is the missing reader.</p>
+          <p>Galley opens every document read-only, every time. No cursor. No accidental edits. Nothing to mangle during a screen share. When you need to fix a typo, edit mode is one keystroke away, and leaving it is just as fast.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="renders">
+    <div class="wrap section-grid">
+      <div class="eyebrow">RENDERING</div>
+      <div>
+        <h2 class="statement">Everything renders.</h2>
+        <div class="body-col lead-in">
+          <p>Tables, task lists, footnotes, callouts. Code with real syntax color. Mermaid diagrams. Math. Front matter as a tidy card instead of a wall of dashes.</p>
+          <p>Point it at a file your agent is still writing. Galley follows along quietly and keeps your place. A small pill says updated. That is the whole ceremony.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wrap shot-wrap">
+      <img class="frame" src="assets/dark.png" alt="Galley rendering a code section with syntax highlighting in the Thesis dark theme" width="1440" height="900" loading="lazy">
+      <img class="frame" src="assets/diagrams.png" alt="Galley rendering a Mermaid flowchart and a table" width="1440" height="900" loading="lazy">
+    </div>
+  </section>
+
+  <section id="themes">
+    <div class="wrap section-grid">
+      <div class="eyebrow">THEMES</div>
+      <div>
+        <h2 class="statement">Five themes.</h2>
+        <div class="body-col lead-in">
+          <p>Five themes: Thesis, Manuscript, Studio, Terminal, Editorial. Each with its own light and dark. Fonts, colors, and accents are yours to change, and the defaults are the best ones.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wrap shot-wrap">
+      <img class="frame" src="assets/themes.png" alt="The five Galley themes shown in the theme picker popover" width="1440" height="900" loading="lazy">
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="foot-lockup">
+          <img src="assets/icon.png" alt="" width="22" height="22">
+          <span class="word">galley</span>
+        </div>
+        <p>No account. No sync. No telemetry. Free, and open source under MIT.</p>
+        <p>In publishing, a galley is the typeset proof of a manuscript, printed plainly so it can simply be read. That is this app.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Project</h4>
+        <a href="https://github.com/JessieSalas/galley" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/JessieSalas/galley/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT license</a>
+      </div>
+      <div class="foot-col">
+        <h4>Studio</h4>
+        <a href="https://thesis.do" target="_blank" rel="noopener noreferrer">thesis.do</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>Set in Bricolage Grotesque, Inter, and JetBrains Mono.</span>
+      <span>The best software doesn&rsquo;t ask for your attention. Galley doesn&rsquo;t even ask for your keyboard.</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

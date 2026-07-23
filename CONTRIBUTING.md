@@ -19,7 +19,7 @@ a notes app, or a platform will be declined kindly.
 
 ```bash
 brew install xcodegen
-git clone https://github.com/thesis-labs/galley && cd galley
+git clone https://github.com/JessieSalas/galley && cd galley
 xcodegen generate
 open Galley.xcodeproj
 ```
