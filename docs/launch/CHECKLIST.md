@@ -38,8 +38,16 @@ Status as of 2026-07-23. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
 
 ## Phase 1, this week (you, about 2 hours)
 
-- [ ] Apple Developer: confirm membership is active. Then in
-      `project.yml`, add your team ID under `settings.base`:
+- [x] Decided: Galley ships under the **jessie@thesis.do** Apple Developer
+      account (Thesis Labs). None of the three Apple identities already on
+      this machine had a Developer ID or Distribution certificate yet, only
+      free local-testing certs, so this is a from-scratch setup either way.
+- [ ] Add jessie@thesis.do to Xcode itself, if it isn't already: Xcode →
+      Settings → Accounts → + → sign in. Automatic signing (already set in
+      project.yml) needs the account there to find/generate certificates.
+- [ ] Confirm the Apple Developer Program membership on that account is
+      active (developer.apple.com/account). Then find its Team ID there and
+      add it to `project.yml` under `settings.base`:
 
   ```yaml
   settings:
@@ -47,9 +55,8 @@ Status as of 2026-07-23. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
       DEVELOPMENT_TEAM: <TEAMID>
   ```
 
-  Note: `project.yml` still has `MARKETING_VERSION: "1.0.0"`, one behind
-  the `v1.1.0` tag just pushed. Bump it to `1.1.0` in the same edit, so
-  the archive you submit matches the release.
+  `MARKETING_VERSION` in project.yml is already bumped to match the
+  `v1.1.0` tag, so no need to touch that.
 
   ```bash
   xcodegen generate
