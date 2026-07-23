@@ -298,7 +298,7 @@ private struct AboutSettings: View {
                 Link("Acknowledgements", destination: URL(string: "https://github.com/JessieSalas/galley/blob/main/ACKNOWLEDGEMENTS.md")!)
             }
             .font(.callout)
-            Text("Open source under the MIT license.\nSet in Bricolage Grotesque, Inter, and JetBrains Mono.")
+            Text("Open source under the MIT license.\nSet in Fraunces, Inter, and JetBrains Mono.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

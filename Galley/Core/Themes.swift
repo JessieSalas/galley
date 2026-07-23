@@ -10,11 +10,12 @@ struct ThemePalette: Codable, Equatable {
 }
 
 enum FontChoice: String, Codable, CaseIterable, Identifiable {
-    case bricolage, inter, newYork, system, jetbrainsMono, sfMono
+    case fraunces, bricolage, inter, newYork, system, jetbrainsMono, sfMono
     var id: String { rawValue }
 
     var css: String {
         switch self {
+        case .fraunces: "\"Fraunces Variable\", ui-serif, Georgia, serif"
         case .bricolage: "\"Bricolage Grotesque Variable\", ui-rounded, system-ui, sans-serif"
         case .inter: "\"Inter Variable\", system-ui, -apple-system, sans-serif"
         case .newYork: "ui-serif, \"New York\", Georgia, serif"
@@ -26,6 +27,7 @@ enum FontChoice: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
+        case .fraunces: "Fraunces"
         case .bricolage: "Bricolage Grotesque"
         case .inter: "Inter"
         case .newYork: "New York (serif)"
@@ -81,7 +83,7 @@ enum ThemeStore {
     static let builtIns: [GalleyTheme] = [
         GalleyTheme(
             id: "thesis", name: "Thesis",
-            blurb: "Warm paper and ink. The house style.",
+            blurb: "Warm paper and ink. Galley's own house style.",
             light: ThemePalette(
                 bg: "#F1ECE2", bgHi: "#F8F5EE", bgDeep: "#EAE4D6",
                 ink: "#15140E", ink2: "#4A4639", ink3: "#403C31", muted: "#8E8879",
@@ -98,7 +100,7 @@ enum ThemeStore {
                 synRed: "#FF8A9A", synAmber: "#FFC37A", synTeal: "#5DE3D0",
                 synBlue: "#8FBCFF", synPurple: "#C9A2FF", synComment: "#7D7869"
             ),
-            displayFont: .bricolage, bodyFont: .inter, monoFont: .jetbrainsMono,
+            displayFont: .fraunces, bodyFont: .inter, monoFont: .jetbrainsMono,
             headingWeight: 600, spectral: true
         ),
         GalleyTheme(
