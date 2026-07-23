@@ -99,13 +99,22 @@ enum MarkdownSourceHighlighter {
         }
 
         // --- List markers (marker only, not the item text) ---
-        forEachMatch(#"^\s*([-*+]|\d+\.) "#, in: text, options: [.anchorsMatchLines]) { range in
+        // [ \t]*, not \s* — \s matches newlines, which let a failed match on
+        // a marker-less document backtrack across the whole remaining text
+        // for every line (quadratic; freezes the editor on large paste-ins).
+        forEachMatch(#"^[ \t]*([-*+]|\d+\.) "#, in: text, options: [.anchorsMatchLines]) { range in
             guard !isInCode(range) else { return }
             storage.addAttribute(.foregroundColor, value: accent, range: range)
         }
 
         // --- Links: [text](url) — brackets/parens muted, text ink, url muted ---
-        forEachMatchGroups(#"\[([^\]]*)\]\(([^)]+)\)"#, in: text) { match in
+        // Both groups are newline-excluded AND length-capped. Excluding \n
+        // alone isn't enough: one huge line full of stray "[" (no closing
+        // bracket) still makes each attempt scan to the line's end, which is
+        // O(n) per attempt — still quadratic overall. Capping the span makes
+        // every attempt O(cap), so total cost is linear in document size.
+        // No real link needs a 500-char label or a 2000-char URL.
+        forEachMatchGroups(#"\[([^\]\n]{0,500})\]\(([^)\n]{1,2000})\)"#, in: text) { match in
             guard !isInCode(match.range) else { return }
             storage.addAttribute(.foregroundColor, value: muted, range: match.range)
             if match.range(at: 1).location != NSNotFound {
