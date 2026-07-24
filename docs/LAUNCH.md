@@ -54,7 +54,7 @@ The one-sentence story, canonical form:
 ## 2. Copy blocks (canonical, reuse everywhere)
 
 **Tagline (primary):**
-> Markdown, finally typeset.
+> Markdown, beautifully typeset.
 
 **Tagline (support):**
 > A quiet, beautiful reader for the files the AI age keeps writing.
@@ -105,7 +105,7 @@ Structure mirrors the site system (eyebrows, statements, hairlines, spectral
 restraint). Sections, in order:
 
 1. **Hero.** Eyebrow: `GALLEY · A READER`. Statement (display font):
-   "Markdown, finally typeset." Lede: the hero line plus the one-sentence
+   "Markdown, beautifully typeset." Lede: the hero line plus the one-sentence
    name story. Actions: `Download for Mac` (GitHub releases link),
    `View source` (GitHub), and later `App Store` when live.
 2. **Product image.** The hero screenshot, full width, hairline border,

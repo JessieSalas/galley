@@ -56,11 +56,19 @@ app.finishLaunching()
 
 // Offscreen windows still report a backing scale factor (inherited from the
 // main screen); size the WKWebView in points so that, rendered at this
-// scale, it lands on exact target pixel sizes. Per the spec this is
-// expected to be 2 on Retina Macs; computed rather than hardcoded so the
-// math stays correct if it isn't.
-let backingScale: CGFloat = NSScreen.main?.backingScaleFactor ?? 2.0
-print("detected backingScaleFactor: \(backingScale)")
+// scale, it lands on exact target pixel sizes.
+//
+// This used to read NSScreen.main?.backingScaleFactor, which is whatever
+// display happens to be "main" in the calling process's session — that
+// varies across invocations (e.g. an attached external non-Retina display)
+// and silently changed the point-size viewport all the layouts were
+// authored against, producing correctly-pixel-sized but wrongly-laid-out
+// images. Every existing asset in docs/launch was authored assuming 2x
+// (LAUNCH.md: "1440x900 points on the 2x display gives 2880x1800 native
+// pixels"), so hardcode it for determinism instead of trusting the
+// environment.
+let backingScale: CGFloat = 2.0
+print("using fixed backingScaleFactor: \(backingScale)")
 
 // MARK: - Theme data (transcribed verbatim from Galley/Core/Themes.swift)
 
@@ -306,9 +314,16 @@ func evalJS(_ webView: WKWebView, _ script: String) -> Any? {
 func snapshotPNG(_ webView: WKWebView, pixelWidth: Int, pixelHeight: Int, to path: String) {
     let cfg = WKSnapshotConfiguration()
     cfg.rect = webView.bounds
-    // Leave snapshotWidth nil: the webview's point-sized bounds, rendered at
-    // the window's backing scale factor, already land on the exact target
-    // pixel size (WebJobRunner sized the view at pixel/backingScale points).
+    // Explicit snapshotWidth, not left nil: nil defers to the actual window's
+    // backing scale factor, which depends on whatever screen happens to be
+    // "main" in the calling session (varies run to run — an attached
+    // non-Retina external display makes it 1, silently halving output
+    // dimensions relative to the assumed-2x point-size layout). Pinning it
+    // to the exact target pixel width makes the output deterministic
+    // regardless of the environment; height follows from the aspect ratio,
+    // which already matches by construction (WebJobRunner's point-size is
+    // pixelWidth/backingScale x pixelHeight/backingScale).
+    cfg.snapshotWidth = NSNumber(value: pixelWidth)
     var image: NSImage?
     var finished = false
     var errText: String?
@@ -389,8 +404,8 @@ func runRenderJob(_ job: [String: Any]) {
         ],
         "headingWeight": theme.headingWeight,
         "spectral": theme.spectral,
-        "measure": 70,
-        "scale": 1.0,
+        "measure": job["measure"] as? Int ?? 70,
+        "scale": job["scale"] as? Double ?? 1.0,
         "allowRemote": false,
         "presenting": false,
     ]

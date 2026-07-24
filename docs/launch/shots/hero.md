@@ -5,7 +5,7 @@ date: 2026-07-23
 tags: [reader, markdown]
 ---
 
-# Markdown, finally typeset.
+# Markdown, beautifully typeset.
 
 Markdown became the paper of the AI age. Agents write plans in it. Models
 answer in it. Your disk is filling with documents that were meant to be
