@@ -38,16 +38,17 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
   bundle ID `do.thesis.galley`). General metadata saved and verified
   server-side (promotional text, full description, keywords, support/
   marketing URLs, version, copyright). Build 1.1.0 (1) attached.
-- **App Store Connect is now fully filled in and saved.** Verified live in
-  the browser: 6 of 10 screenshots uploaded (the full shot list from
-  `docs/launch/screenshots/`), and App Review Information's Contact
-  Information has name, email, and phone (`+16694547669`) — the Save
-  button is greyed out with no pending changes, confirming the earlier 409
-  is resolved. The only thing left here is the deliberate call below:
-  hitting "Add for Review."
-- THESIS pushed: the font and tagline commits (`7623b96`, `6565c8f`) are on
-  `origin/main`, so thesis.do is redeploying with Fraunces and "beautifully
-  typeset" live.
+- **App Store Connect submitted for review.** Filled in everything that
+  was actually still missing beyond the version page: Category
+  (Productivity), Content Rights (no third-party content), Age Ratings
+  (answered the full 7-step questionnaire, calculated rating 4+), App
+  Privacy (added a real privacy policy page at thesis.do/privacy and
+  answered the data-collection questionnaire: data not collected),
+  and Pricing and Availability (free, all 175 countries). Clicked "Add for
+  Review" then "Submit for Review" — confirmed: **1 Item Submitted,
+  status Waiting for Review**, up to 48 hours.
+- THESIS pushed: the font, tagline, and new privacy-policy commits are on
+  `origin/main`, so thesis.do is redeploying live.
 
 ## Blocked on you — one thing, then two bigger optional ones
 
@@ -92,7 +93,7 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
 
 ## Phase 2, launch day (once the above is done)
 
-- [ ] Submit the App Store Connect app for review ("Add for Review").
+- [x] Submit the App Store Connect app for review ("Add for Review") — done, waiting on Apple.
 - [ ] Schedule and post Product Hunt: Tuesday or Wednesday, 12:01 AM
       Pacific. Post the maker comment the moment it's live.
 - [ ] Show HN: "Show HN: Galley, an open-source Markdown reader for the
