@@ -1,146 +1,118 @@
 # Launch checklist
 
-Status as of 2026-07-23. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
+Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
 
-## Phase 0, today
+## Done
 
-- [x] Screenshots captured and processed. `docs/launch/screenshots/` (App
-      Store crops and web crops) and `site/assets/` are in the repo.
-- [x] GitHub repo public, links consistent, README with images. Repo is
-      live at https://github.com/JessieSalas/galley, every
-      `thesis-labs/galley` reference in the app and docs now points to
-      `JessieSalas/galley`, and the README has the hero and themes
-      screenshots plus an Install section.
-- [x] Landing page in repo. `site/index.html` ships in this repo.
-- [x] thesis.do route and homepage card committed to the THESIS repo,
-      locally. Confirmed by running `git log --oneline -1` in
-      `~/Projects/THESIS`:
+- Security audit: no kept code, kept data, or secrets anywhere in the public
+  repo or its git history. Two real issues found and fixed: a committed
+  scratchpad symlink, and a ReDoS-class regex in the edit-mode syntax
+  highlighter (verified with real benchmarks before and after).
+- Font: Galley's own display face is Fraunces, not kept's Bricolage
+  Grotesque, everywhere (in-app default theme, both landing pages, all
+  screenshots).
+- Tagline changed to "Markdown, beautifully typeset." everywhere, including
+  every screenshot with it baked into the pixels.
+- The screenshot tool itself (`scripts/snapshot.swift`) got two real fixes:
+  it no longer depends on the calling session's ambient display scale
+  (was silently non-deterministic), and it now exposes `scale`/`measure`
+  as job options.
+- thesis.do is live. Pushed and verified directly: thesis.do/galley
+  renders correctly, the homepage shows kept and galley side by side, both
+  intact.
+- Repo public: https://github.com/JessieSalas/galley. Release live:
+  https://github.com/JessieSalas/galley/releases/tag/v1.1.0 (unsigned
+  preview zip attached; notarized DMG still to come, see below).
+- Git history rewritten: every commit message's "Co-Authored-By: Claude"
+  trailer stripped (main and the v1.1.0 tag force-pushed to the rewritten
+  history; verified zero trailers remain and the release asset survived).
+  All commits from here on are plain, no AI attribution.
+- Apple signing pipeline verified end to end under **Thesis Labs LLC**
+  (Team ID `922HAZ57Q8`, wired into `project.yml`): archived, exported for
+  App Store Connect (real "Cloud Managed Apple Distribution" cert,
+  Xcode auto-generated it live), exported Developer ID (real "Developer ID
+  Application: Thesis Labs LLC" cert, also auto-generated), and **uploaded
+  build 1.1.0 straight to App Store Connect** — all via Xcode's already
+  authenticated account session, no password ever touched.
+- App Store Connect: app record created ("Galley, Markdown Reader",
+  bundle ID `do.thesis.galley`). General metadata saved and verified
+  server-side (promotional text, full description, keywords, support/
+  marketing URLs, version, copyright). Build 1.1.0 (1) attached.
 
-      ```
-      dc30449 Add galley: /galley product page and homepage presence
-      ```
+## Blocked on you — two small things, then two bigger optional ones
 
-      That commit is local only, `git status` in THESIS shows the branch
-      one commit ahead of `origin/main`, not yet pushed. It touches
-      `app/galley/page.tsx`, `app/galley/galley-page-client.tsx`,
-      `app/page.tsx`, `app/globals.css`, and five images under
-      `public/galley/`.
-- [ ] You: review the THESIS diff, push to main (site auto-deploys).
+- [ ] **App Store Connect → App Review Information → Contact Information.**
+      Name and email are filled; the **Phone number** field is required and
+      must be in `+countrycode...` format, which I don't have and won't
+      fabricate. This is also why the section wouldn't save no matter how
+      many times I retried (a persistent 409 from the server — confirmed via
+      network inspection, not a fluke — traces directly back to this missing
+      required field). Takes 20 seconds:
+      https://appstoreconnect.apple.com/apps/6794124447/distribution/macos/version/inflight
+      → scroll to App Review Information → fill Phone → Save.
+
+- [ ] **Screenshots, both platforms.** I hit a real, intentional tool
+      boundary, not a bug: neither the file-upload tool nor computer-use can
+      drive a native macOS file picker spawned from Chrome (browsers are
+      permanently read-tier for computer-use; file uploads require files the
+      user explicitly shared with the session). This needs your hands:
+      - **App Store Connect**, same page as above, top of the page: drag
+        the 6 files from `docs/launch/screenshots/appstore-1-hero.png`
+        through `appstore-6-terminal.png` onto the screenshot well.
+      - **Product Hunt**: the draft is filled through the Main Info step
+        (name, tagline, links, tags, description, open-source toggle, the
+        maker comment) at https://www.producthunt.com/posts/new/submission
+        — click "Next step: Images and media" and drag in
+        `docs/launch/producthunt/ph-0-tagline.png` through `ph-6.png` plus
+        `ph-icon-240.png`, per the order in
+        [COPY.md](producthunt/COPY.md).
+
+- [ ] **Notarize the DMG** (optional — only needed for direct/Homebrew
+      distribution outside the App Store). Requires an App Store Connect
+      API key, which is its own account-level grant
+      (Users and Access → Integrations → App Store Connect API) that needs
+      your explicit action to enable — I stopped at that page rather than
+      requesting API access on your behalf. Once you have a key:
+
+  ```bash
+  xcrun notarytool store-credentials galley \
+    --key ~/path/to/AuthKey_XXXX.p8 --key-id XXXX --issuer-id XXXX
+  cd ~/Projects/galley
+  xcodebuild -exportArchive -archivePath build/Galley.xcarchive \
+    -exportPath build/export-developer-id \
+    -exportOptionsPlist docs/ExportOptions-developer-id.plist -allowProvisioningUpdates
+  xcrun notarytool submit build/export-developer-id/Galley.app --keychain-profile galley --wait
+  xcrun stapler staple build/export-developer-id/Galley.app
+  ./scripts/make-dmg.sh build/export-developer-id/Galley.app
+  gh release upload v1.1.0 Galley-1.1.0.dmg
+  ```
+
+  Then finish the Homebrew cask (`docs/launch/homebrew-cask-galley.rb` has
+  the template; needs the notarized zip's sha256) and submit:
+  `brew bump-cask-pr --version 1.1.0 galley`.
+
+- [ ] **Push THESIS.** Two commits sitting locally, reviewed and ready:
 
   ```bash
   cd ~/Projects/THESIS
-  git show dc30449          # review the diff
+  git log origin/main..HEAD --oneline   # 7623b96 font, 6565c8f tagline
   git push origin main
   ```
 
-- [ ] You: check thesis.do/galley renders, click every link (Download for
-      Mac, View source, the kept cross-link, the homepage card).
+## Phase 2, launch day (once the above is done)
 
-## Phase 1, this week (you, about 2 hours)
-
-- [x] Decided: Galley ships under the **jessie@thesis.do** Apple Developer
-      account (Thesis Labs). None of the three Apple identities already on
-      this machine had a Developer ID or Distribution certificate yet, only
-      free local-testing certs, so this is a from-scratch setup either way.
-- [ ] Add jessie@thesis.do to Xcode itself, if it isn't already: Xcode →
-      Settings → Accounts → + → sign in. Automatic signing (already set in
-      project.yml) needs the account there to find/generate certificates.
-- [ ] Confirm the Apple Developer Program membership on that account is
-      active (developer.apple.com/account). Then find its Team ID there and
-      add it to `project.yml` under `settings.base`:
-
-  ```yaml
-  settings:
-    base:
-      DEVELOPMENT_TEAM: <TEAMID>
-  ```
-
-  `MARKETING_VERSION` in project.yml is already bumped to match the
-  `v1.1.0` tag, so no need to touch that.
-
-  ```bash
-  xcodegen generate
-  xcodebuild -project Galley.xcodeproj -scheme Galley -configuration Release \
-    -archivePath build/Galley.xcarchive archive
-  ```
-
-- [ ] Notarize the DMG. Exact commands are in
-      [DISTRIBUTION.md](../DISTRIBUTION.md) section 1:
-
-  ```bash
-  xcodebuild -exportArchive -archivePath build/Galley.xcarchive \
-    -exportPath build/export -exportOptionsPlist docs/ExportOptions-developer-id.plist
-  xcrun notarytool submit build/export/Galley.app --keychain-profile galley --wait
-  xcrun stapler staple build/export/Galley.app
-  ./scripts/make-dmg.sh build/export/Galley.app
-  ```
-
-  Then attach the notarized DMG to the `v1.1.0` GitHub release (it
-  currently only has the unsigned preview zip):
-
-  ```bash
-  gh release upload v1.1.0 build/Galley-1.1.0.dmg
-  ```
-
-  Update the landing page Download link in `site/index.html` (and the
-  THESIS `app/galley` page) to point at the DMG once it is attached.
-
-- [ ] Submit the Homebrew cask. The name `galley` was verified unclaimed
-      as of 2026-07, per [DISTRIBUTION.md](../DISTRIBUTION.md):
-
-  ```bash
-  brew bump-cask-pr --version 1.1.0 galley
-  ```
-
-- [ ] App Store Connect: create the app record "Galley, Markdown Reader".
-      Upload the archive from Xcode Organizer, paste the copy from
-      [docs/launch/appstore/metadata.md](appstore/metadata.md), upload the
-      six `appstore-*.png` screenshots listed there, submit with the
-      review notes (already included verbatim in that file).
-- [ ] Create a Product Hunt draft using
-      [docs/launch/producthunt/COPY.md](producthunt/COPY.md). Schedule for
-      Tuesday or Wednesday, 12:01 AM Pacific.
-
-## Phase 2, launch day
-
-- [ ] PH goes live. Post the maker comment from `COPY.md` immediately.
-- [ ] Show HN: title "Show HN: Galley, an open-source Markdown reader for
-      the Mac." First comment condenses the maker story, links GitHub
-      first.
-- [ ] r/macapps post, X/Bluesky thread with the hero screenshot and the
-      one-sentence name story from LAUNCH.md section 1.
+- [ ] Submit the App Store Connect app for review ("Add for Review").
+- [ ] Schedule and post Product Hunt: Tuesday or Wednesday, 12:01 AM
+      Pacific. Post the maker comment the moment it's live.
+- [ ] Show HN: "Show HN: Galley, an open-source Markdown reader for the
+      Mac." Link GitHub first.
+- [ ] r/macapps, X/Bluesky with the hero screenshot and the one-sentence
+      name story from LAUNCH.md section 1.
 - [ ] Reply to everything for six hours. File real bugs as GitHub issues
-      as they come in.
+      as they land.
 
 ## Phase 3, the week after
 
 - [ ] Ship a v1.1.x with the two most-requested small fixes. Announce in a
-      PH comment and in the release notes ("the reader reads its
-      readers").
-- [ ] Write the build story for thesis.do: the research, the moat, the
-      name.
-
-## What is already done (this session)
-
-- URL sweep: every `thesis-labs/galley` reference replaced with
-  `JessieSalas/galley` in README.md, CONTRIBUTING.md, DESIGN.md,
-  docs/appstore/metadata.md, Galley/App/GalleyCommands.swift,
-  Galley/Resources/Samples/Welcome.md, Galley/Views/SettingsView.swift.
-  `site/index.html` was already correct. The phrase "transfer to a
-  thesis-labs org later" in LAUNCH.md was left alone, and LAUNCH.md's own
-  reference to the `thesis-labs/galley` URL pattern (its section 8
-  instructions to future agents) was left as written.
-- README upgraded: hero and themes screenshots, an Install section
-  (Releases download, build from source, App Store coming soon), and an
-  em dash sweep through the prose.
-- `docs/launch/appstore/metadata.md` written per LAUNCH.md section 7.
-- `docs/launch/producthunt/COPY.md` written per LAUNCH.md section 6.
-- Debug build verified: `BUILD SUCCEEDED`.
-- Release build verified: `BUILD SUCCEEDED`. Packaged as an unsigned
-  preview zip, since no `DEVELOPMENT_TEAM` is configured yet.
-- `.gitignore` gained a `build-release/` entry so the 348 MB unsigned
-  Release build products are not tracked in git history.
-- Repo published: https://github.com/JessieSalas/galley, public, with
-  topics macos, markdown, swift, swiftui, markdown-viewer, reader.
-- Release published: https://github.com/JessieSalas/galley/releases/tag/v1.1.0,
-  with the unsigned preview zip attached.
+      PH comment and the release notes ("the reader reads its readers").
+- [ ] Write the build story for thesis.do: the research, the moat, the name.
