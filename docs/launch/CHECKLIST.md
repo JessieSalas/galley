@@ -38,34 +38,33 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
   bundle ID `do.thesis.galley`). General metadata saved and verified
   server-side (promotional text, full description, keywords, support/
   marketing URLs, version, copyright). Build 1.1.0 (1) attached.
+- **App Store Connect is now fully filled in and saved.** Verified live in
+  the browser: 6 of 10 screenshots uploaded (the full shot list from
+  `docs/launch/screenshots/`), and App Review Information's Contact
+  Information has name, email, and phone (`+16694547669`) — the Save
+  button is greyed out with no pending changes, confirming the earlier 409
+  is resolved. The only thing left here is the deliberate call below:
+  hitting "Add for Review."
+- THESIS pushed: the font and tagline commits (`7623b96`, `6565c8f`) are on
+  `origin/main`, so thesis.do is redeploying with Fraunces and "beautifully
+  typeset" live.
 
-## Blocked on you — two small things, then two bigger optional ones
+## Blocked on you — one thing, then two bigger optional ones
 
-- [ ] **App Store Connect → App Review Information → Contact Information.**
-      Name and email are filled; the **Phone number** field is required and
-      must be in `+countrycode...` format, which I don't have and won't
-      fabricate. This is also why the section wouldn't save no matter how
-      many times I retried (a persistent 409 from the server — confirmed via
-      network inspection, not a fluke — traces directly back to this missing
-      required field). Takes 20 seconds:
-      https://appstoreconnect.apple.com/apps/6794124447/distribution/macos/version/inflight
-      → scroll to App Review Information → fill Phone → Save.
-
-- [ ] **Screenshots, both platforms.** I hit a real, intentional tool
-      boundary, not a bug: neither the file-upload tool nor computer-use can
-      drive a native macOS file picker spawned from Chrome (browsers are
-      permanently read-tier for computer-use; file uploads require files the
-      user explicitly shared with the session). This needs your hands:
-      - **App Store Connect**, same page as above, top of the page: drag
-        the 6 files from `docs/launch/screenshots/appstore-1-hero.png`
-        through `appstore-6-terminal.png` onto the screenshot well.
-      - **Product Hunt**: the draft is filled through the Main Info step
-        (name, tagline, links, tags, description, open-source toggle, the
-        maker comment) at https://www.producthunt.com/posts/new/submission
-        — click "Next step: Images and media" and drag in
-        `docs/launch/producthunt/ph-0-tagline.png` through `ph-6.png` plus
-        `ph-icon-240.png`, per the order in
-        [COPY.md](producthunt/COPY.md).
+- [ ] **Product Hunt screenshots.** Still empty ("Thumbnail is required",
+      "Image is required" on the Images and media step) — App Store
+      Connect's screenshots made it in, but Product Hunt's didn't. I tried
+      a workaround (pasting public `raw.githubusercontent.com` URLs into
+      PH's "Paste a URL" field instead of drag-and-drop, since the file
+      picker is a wall I already know I can't drive) — it triggered a
+      clipboard-permission prompt in the browser extension's side panel
+      that only you can approve, and froze the tab until I reloaded the
+      page. I'm not going to keep poking at that; it needs your hands,
+      same as before:
+      https://www.producthunt.com/posts/new/submission → Images and media
+      → drag in `docs/launch/producthunt/ph-0-tagline.png` through
+      `ph-6.png` plus `ph-icon-240.png` (thumbnail), per the order in
+      [COPY.md](producthunt/COPY.md).
 
 - [ ] **Notarize the DMG** (optional — only needed for direct/Homebrew
       distribution outside the App Store). Requires an App Store Connect
@@ -90,14 +89,6 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
   Then finish the Homebrew cask (`docs/launch/homebrew-cask-galley.rb` has
   the template; needs the notarized zip's sha256) and submit:
   `brew bump-cask-pr --version 1.1.0 galley`.
-
-- [ ] **Push THESIS.** Two commits sitting locally, reviewed and ready:
-
-  ```bash
-  cd ~/Projects/THESIS
-  git log origin/main..HEAD --oneline   # 7623b96 font, 6565c8f tagline
-  git push origin main
-  ```
 
 ## Phase 2, launch day (once the above is done)
 
