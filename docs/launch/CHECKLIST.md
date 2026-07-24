@@ -21,8 +21,10 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
   renders correctly, the homepage shows kept and galley side by side, both
   intact.
 - Repo public: https://github.com/JessieSalas/galley. Release live:
-  https://github.com/JessieSalas/galley/releases/tag/v1.1.0 (unsigned
-  preview zip attached; notarized DMG still to come, see below).
+  https://github.com/JessieSalas/galley/releases/tag/v1.1.0 — signed,
+  notarized, and stapled (`Galley-1.1.0.zip` and `Galley-1.1.0.dmg`),
+  verified with `spctl` (accepted, source=Notarized Developer ID) and
+  `stapler validate`. The old unsigned preview zip was removed.
 - Git history rewritten: every commit message's "Co-Authored-By: Claude"
   trailer stripped (main and the v1.1.0 tag force-pushed to the rewritten
   history; verified zero trailers remain and the release asset survived).
@@ -50,7 +52,7 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
 - THESIS pushed: the font, tagline, and new privacy-policy commits are on
   `origin/main`, so thesis.do is redeploying live.
 
-## Blocked on you — one thing, then two bigger optional ones
+## Blocked on you — one thing, then one optional one
 
 - [ ] **Product Hunt screenshots.** Still empty ("Thumbnail is required",
       "Image is required" on the Images and media step) — App Store
@@ -67,29 +69,18 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
       `ph-6.png` plus `ph-icon-240.png` (thumbnail), per the order in
       [COPY.md](producthunt/COPY.md).
 
-- [ ] **Notarize the DMG** (optional — only needed for direct/Homebrew
-      distribution outside the App Store). Requires an App Store Connect
-      API key, which is its own account-level grant
-      (Users and Access → Integrations → App Store Connect API) that needs
-      your explicit action to enable — I stopped at that page rather than
-      requesting API access on your behalf. Once you have a key:
-
-  ```bash
-  xcrun notarytool store-credentials galley \
-    --key ~/path/to/AuthKey_XXXX.p8 --key-id XXXX --issuer-id XXXX
-  cd ~/Projects/galley
-  xcodebuild -exportArchive -archivePath build/Galley.xcarchive \
-    -exportPath build/export-developer-id \
-    -exportOptionsPlist docs/ExportOptions-developer-id.plist -allowProvisioningUpdates
-  xcrun notarytool submit build/export-developer-id/Galley.app --keychain-profile galley --wait
-  xcrun stapler staple build/export-developer-id/Galley.app
-  ./scripts/make-dmg.sh build/export-developer-id/Galley.app
-  gh release upload v1.1.0 Galley-1.1.0.dmg
-  ```
-
-  Then finish the Homebrew cask (`docs/launch/homebrew-cask-galley.rb` has
-  the template; needs the notarized zip's sha256) and submit:
-  `brew bump-cask-pr --version 1.1.0 galley`.
+- [x] ~~Notarize the DMG~~ — done. Signed with the real Thesis Labs LLC
+      Developer ID cert, notarized by Apple (status: Accepted), stapled,
+      and verified (`spctl` accepts, `stapler validate` passes). Both
+      `Galley-1.1.0.zip` and `Galley-1.1.0.dmg` are on the GitHub release;
+      the old ad-hoc-signed preview zip was removed. The DMG container
+      itself couldn't be separately code-signed (that private key only
+      lives inside Xcode's own automatic-signing session, not reachable
+      from a bare `codesign` call) — Apple's notarization docs say this is
+      fine for disk images, and the notary service accepted it regardless.
+      `docs/launch/homebrew-cask-galley.rb` now has the real sha256 and is
+      ready to submit: `brew bump-cask-pr --version 1.1.0 galley` (or open
+      a PR by hand against Homebrew/homebrew-cask).
 
 ## Phase 2, launch day (once the above is done)
 
