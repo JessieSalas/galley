@@ -1,6 +1,39 @@
 # Launch checklist
 
-Status as of 2026-07-24. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
+Status as of 2026-07-24, v1.1.3 shipped. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
+
+## Post-1.1.0 patches shipped
+
+- **1.1.1** — one-click "Set Galley as Default" in Settings
+  (`NSWorkspace.setDefaultApplication`), covering every Markdown extension
+  in one click instead of Finder's per-extension Change All.
+- **1.1.2** — Finder thumbnail extension (`GalleyThumbnail.appex`, a second
+  QuickLook-family target): gallery/icon/column views render Markdown as
+  a small typeset page instead of a raw text dump. Note on this machine
+  specifically: macOS's own system Text thumbnailer appears to win the
+  election for `net.daringfireball.markdown` via its `public.plain-text`
+  conformance under the newer "secure" ExtensionKit point — a platform
+  election quirk, not a bug in the extension itself (proven by routing a
+  probe UTI through the same code, which rendered correctly). Worth
+  rechecking on a clean install if thumbnails don't show Galley's render.
+- **1.1.3** — presentation mode actually looks like a presentation now:
+  the outline sidebar hides on entry (was leaving its own scroll
+  indicator riding next to the document's, reading as a stray second
+  scrollbar) and restores on exit through all four doors fullscreen can
+  be entered/exited (Present command, native green button, View menu,
+  ⌃⌘F); a small dot cursor replaces the arrow over the reading surface
+  while presenting; the sidebar now opens by default on a fresh window.
+  All three shipped after an adversarial review pass caught and fixed
+  real races: a manual sidebar toggle mid-presentation no longer gets
+  silently reverted on exit, `togglePresentation()` guards against
+  re-entry mid-animation, and the cursor's rect re-invalidates on any
+  frame change (AppKit doesn't do that automatically for a subview
+  resize that isn't a window-frame resize).
+
+Each patch: archived, Developer ID signed, notarized (app and DMG
+separately), stapled, verified with `spctl`, released on GitHub, and
+swapped in on thesis.do — same pipeline as 1.1.0, now proven fast and
+repeatable (typically 5-10 minutes end to end once code is ready).
 
 ## Done
 
