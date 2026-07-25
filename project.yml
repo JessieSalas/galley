@@ -8,8 +8,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.10"
-    MARKETING_VERSION: "1.1.1"
-    CURRENT_PROJECT_VERSION: "2"
+    MARKETING_VERSION: "1.1.2"
+    CURRENT_PROJECT_VERSION: "3"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: 922HAZ57Q8
     ENABLE_HARDENED_RUNTIME: true
@@ -41,6 +41,8 @@ targets:
     dependencies:
       - target: GalleyQuickLook
         embed: true
+      - target: GalleyThumbnail
+        embed: true
 
   GalleyQuickLook:
     type: app-extension
@@ -55,6 +57,20 @@ targets:
         PRODUCT_NAME: GalleyQuickLook
         INFOPLIST_FILE: QuickLook/Info.plist
         CODE_SIGN_ENTITLEMENTS: QuickLook/QuickLook.entitlements
+        SKIP_INSTALL: true
+
+  GalleyThumbnail:
+    type: app-extension
+    platform: macOS
+    sources:
+      - Thumbnail/ThumbnailProvider.swift
+      - Thumbnail/ThumbnailRenderer.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: do.thesis.galley.thumbnail
+        PRODUCT_NAME: GalleyThumbnail
+        INFOPLIST_FILE: Thumbnail/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Thumbnail/Thumbnail.entitlements
         SKIP_INSTALL: true
 
 schemes:
