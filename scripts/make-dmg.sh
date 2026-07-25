@@ -34,7 +34,7 @@ rm -f "$OUT"
 create-dmg \
     --volname "Galley" \
     --volicon "$SCRIPT_DIR/dmg/volume.icns" \
-    --background "$SCRIPT_DIR/dmg/background.png" \
+    --background "$SCRIPT_DIR/dmg/background.tiff" \
     --window-pos 200 120 \
     --window-size 660 420 \
     --icon-size 128 \
