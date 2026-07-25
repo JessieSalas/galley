@@ -27,6 +27,7 @@
 		AA422A9096944AF320D07C67 /* ql.bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = A4FBE38172AC19EECAA65E82 /* ql.bundle.js */; };
 		B611A9650266452DD627D601 /* GalleyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6B850B9945D6F4008614D /* GalleyApp.swift */; };
 		BC1CF0E7A8297DC64B82EA03 /* ReaderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C80EA85526645430F3A8E8 /* ReaderModel.swift */; };
+		C37901EABDEB0EFCAF743673 /* PresentationCursorOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9E34DB363882F36DA9EA73 /* PresentationCursorOverlay.swift */; };
 		C44F792B068C35D097F760A0 /* Exporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */; };
 		C8F230F61E020FB770A36E79 /* ReaderWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */; };
 		CD9AC91344050A701AE853CE /* Samples in Resources */ = {isa = PBXBuildFile; fileRef = 28A6D13291F8F4D549DD4F1F /* Samples */; };
@@ -90,6 +91,7 @@
 		E181B8226DA662DF5FB7940F /* GalleyThumbnail.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GalleyThumbnail.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderWebView.swift; sourceTree = "<group>"; };
 		E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleyCommands.swift; sourceTree = "<group>"; };
+		EC9E34DB363882F36DA9EA73 /* PresentationCursorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationCursorOverlay.swift; sourceTree = "<group>"; };
 		EF05A80B3AEB595C02B64B68 /* ThumbnailRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailRenderer.swift; sourceTree = "<group>"; };
 		F3F70494F33B4E0E924F69B6 /* Themes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Themes.swift; sourceTree = "<group>"; };
 		FD52CA4BEA6390CF47383675 /* ThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailProvider.swift; sourceTree = "<group>"; };
@@ -164,6 +166,7 @@
 			children = (
 				699DAEB53A36226A66941A53 /* DocumentView.swift */,
 				3C4D5B13503E00B2592D177D /* MarkdownEditorView.swift */,
+				EC9E34DB363882F36DA9EA73 /* PresentationCursorOverlay.swift */,
 				E4708E2B339C8C326EFA6DB9 /* ReaderWebView.swift */,
 				DC5BC5906CF1DC9E1821BDE4 /* SettingsView.swift */,
 			);
@@ -358,6 +361,7 @@
 				29418FC3951B4BC5B0957091 /* MarkdownDocument.swift in Sources */,
 				2BF6BFB1B690925B6BB09486 /* MarkdownEditorView.swift in Sources */,
 				F5769FC4909F7024E45E725B /* MarkdownSourceHighlighter.swift in Sources */,
+				C37901EABDEB0EFCAF743673 /* PresentationCursorOverlay.swift in Sources */,
 				BC1CF0E7A8297DC64B82EA03 /* ReaderModel.swift in Sources */,
 				C8F230F61E020FB770A36E79 /* ReaderWebView.swift in Sources */,
 				05DF811E96A68994E4850B17 /* SettingsView.swift in Sources */,

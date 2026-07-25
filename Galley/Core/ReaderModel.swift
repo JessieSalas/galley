@@ -619,12 +619,21 @@ final class ReaderModel: NSObject, ObservableObject {
         scrollToHeading(id)
     }
 
+    /// True for the duration of a native fullscreen enter/exit animation
+    /// (~0.3-0.5s, asynchronous). Guards `togglePresentation()` against being
+    /// re-entered mid-transition, which would otherwise race the in-flight
+    /// animation with a second `window.toggleFullScreen(nil)` or a stale
+    /// `styleMask` read.
+    private var fullScreenTransitionInProgress = false
+
     func togglePresentation() {
+        guard !fullScreenTransitionInProgress else { return }
         presenting.toggle()
         pushOptions()
         guard let window = webView?.window else { return }
         let isFullScreen = window.styleMask.contains(.fullScreen)
         if presenting != isFullScreen {
+            fullScreenTransitionInProgress = true
             window.toggleFullScreen(nil)
         }
     }
@@ -632,7 +641,23 @@ final class ReaderModel: NSObject, ObservableObject {
     private func observeFullScreen(of webView: WKWebView) {
         guard fullScreenObservers.isEmpty else { return }
         let center = NotificationCenter.default
-        let exit = center.addObserver(
+
+        // Fullscreen can also be entered/exited through doors Galley doesn't
+        // control — the native green button, View ▸ Enter Full Screen, ⌃⌘F —
+        // none of which go through togglePresentation(). These observers are
+        // the single source of truth that keeps `presenting` (and therefore
+        // the sidebar) in sync no matter which door was used.
+        let willEnter = center.addObserver(
+            forName: NSWindow.willEnterFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            Task { @MainActor in
+                guard let self, let window = self.webView?.window,
+                      (note.object as? NSWindow) === window, !self.presenting else { return }
+                self.presenting = true
+                self.pushOptions()
+            }
+        }
+        let willExit = center.addObserver(
             forName: NSWindow.willExitFullScreenNotification, object: nil, queue: .main
         ) { [weak self] note in
             Task { @MainActor in
@@ -642,7 +667,38 @@ final class ReaderModel: NSObject, ObservableObject {
                 self.pushOptions()
             }
         }
-        fullScreenObservers = [exit]
+        // The "did" notifications mark the transition as actually finished
+        // (as opposed to "will", which fires before the animation runs) —
+        // they clear the in-flight guard and, as a final reconciliation
+        // pass, correct `presenting` if it somehow still disagrees with
+        // reality once the window has settled.
+        let didEnter = center.addObserver(
+            forName: NSWindow.didEnterFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            Task { @MainActor in
+                guard let self, let window = self.webView?.window,
+                      (note.object as? NSWindow) === window else { return }
+                self.fullScreenTransitionInProgress = false
+                if !self.presenting {
+                    self.presenting = true
+                    self.pushOptions()
+                }
+            }
+        }
+        let didExit = center.addObserver(
+            forName: NSWindow.didExitFullScreenNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            Task { @MainActor in
+                guard let self, let window = self.webView?.window,
+                      (note.object as? NSWindow) === window else { return }
+                self.fullScreenTransitionInProgress = false
+                if self.presenting {
+                    self.presenting = false
+                    self.pushOptions()
+                }
+            }
+        }
+        fullScreenObservers = [willEnter, willExit, didEnter, didExit]
     }
 
     func scrollToHeading(_ id: String) {

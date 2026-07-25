@@ -2,7 +2,13 @@ import SwiftUI
 
 struct DocumentView: View {
     @StateObject private var model: ReaderModel
-    @State private var sidebarVisibility = NavigationSplitViewVisibility.detailOnly
+    @State private var sidebarVisibility = NavigationSplitViewVisibility.all
+    @State private var sidebarVisibilityBeforePresenting: NavigationSplitViewVisibility?
+    // Whatever we last set `sidebarVisibility` to ourselves (entering
+    // presentation), so the sidebarVisibility observer below can tell our
+    // own write apart from a manual one (⌃⌘S, the divider drag, …).
+    @State private var lastProgrammaticSidebarVisibility: NavigationSplitViewVisibility?
+    @State private var sidebarManuallyChangedWhilePresenting = false
     @State private var showInfo = false
     @State private var showTypePopover = false
 
@@ -21,6 +27,35 @@ struct DocumentView: View {
         .toolbar { toolbarContent }
         .focusedSceneValue(\.readerModel, model)
         .onDisappear { model.saveScrollPosition() }
+        // Presentation is a clean reading surface, not the windowed layout
+        // just stretched fullscreen — the outline sidebar's own scroll
+        // indicator was riding along next to the document's, reading as a
+        // stray "ghost" scrollbar. Hide it going in, restore whatever the
+        // user had going out (covers both the menu/shortcut toggle and
+        // exiting fullscreen directly via the system's green-button UI,
+        // since both paths flow through this one published property).
+        .onChange(of: model.presenting) { _, presenting in
+            if presenting {
+                sidebarVisibilityBeforePresenting = sidebarVisibility
+                sidebarManuallyChangedWhilePresenting = false
+                sidebarVisibility = .detailOnly
+                lastProgrammaticSidebarVisibility = .detailOnly
+            } else {
+                // Only snap back to the pre-presentation sidebar state if the
+                // user never touched the sidebar while presenting — a manual
+                // toggle in between (⌃⌘S, the divider drag) is a deliberate
+                // choice and must win over the stale snapshot.
+                if !sidebarManuallyChangedWhilePresenting, let restored = sidebarVisibilityBeforePresenting {
+                    sidebarVisibility = restored
+                }
+                sidebarVisibilityBeforePresenting = nil
+                lastProgrammaticSidebarVisibility = nil
+            }
+        }
+        .onChange(of: sidebarVisibility) { _, newValue in
+            guard model.presenting, newValue != lastProgrammaticSidebarVisibility else { return }
+            sidebarManuallyChangedWhilePresenting = true
+        }
     }
 
     private var subtitle: String {
@@ -64,6 +99,9 @@ struct DocumentView: View {
             .animation(.easeOut(duration: 0.18), value: model.findBarVisible)
             .animation(.easeOut(duration: 0.18), value: model.needsFolderAccess)
             .animation(.easeOut(duration: 0.18), value: model.externalChangePending)
+
+            PresentationCursorOverlay(active: model.presenting && !model.isEditing)
+                .allowsHitTesting(false)
         }
     }
 
