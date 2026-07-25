@@ -1,6 +1,6 @@
 # Launch checklist
 
-Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
+Status as of 2026-07-24. Source plan: [LAUNCH.md](../LAUNCH.md) section 9.
 
 ## Done
 
@@ -51,6 +51,25 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
   status Waiting for Review**, up to 48 hours.
 - THESIS pushed: the font, tagline, and new privacy-policy commits are on
   `origin/main`, so thesis.do is redeploying live.
+- **Shipped v1.1.1.** Ran the real customer install from a fresh download
+  of thesis.do's actual production DMG (quarantine flag set, like a real
+  Safari download): zero Gatekeeper warnings, clean drag-to-Applications
+  install. Along the way, found that `.md` opened in Xcode by default on
+  this machine (the exact problem Galley exists to fix), and that the
+  documented Finder "Change All" method only covers the one extension you
+  right-click, not all 5 Galley supports. Added a one-click "Set Galley as
+  Default" button (`NSWorkspace.setDefaultApplication(at:toOpen:)`) that
+  covers the whole UTI at once — tested against a real signed debug build
+  first since this API is documented to throw a permission error on
+  sandboxed apps (Galley is sandboxed even in the direct-distribution
+  build); it worked cleanly, verified by opening a `.markdown` file that
+  had never been touched. Built, signed, notarized (both the app and the
+  DMG), stapled, and verified all over again for 1.1.1 specifically.
+  Live: https://github.com/JessieSalas/galley/releases/tag/v1.1.1 and
+  thesis.do/galley (old 1.1.0 DMG removed from both, confirmed 404).
+  `docs/launch/homebrew-cask-galley.rb` updated to 1.1.1's sha256 (also
+  fixed a real syntax bug it had, `>= :sonoma` isn't valid Ruby DSL —
+  should be `:sonoma`).
 
 ## Blocked on you — one thing, then one optional one
 
@@ -69,18 +88,14 @@ Status as of 2026-07-23, end of session. Source plan: [LAUNCH.md](../LAUNCH.md) 
       `ph-6.png` plus `ph-icon-240.png` (thumbnail), per the order in
       [COPY.md](producthunt/COPY.md).
 
-- [x] ~~Notarize the DMG~~ — done. Signed with the real Thesis Labs LLC
-      Developer ID cert, notarized by Apple (status: Accepted), stapled,
-      and verified (`spctl` accepts, `stapler validate` passes). Both
-      `Galley-1.1.0.zip` and `Galley-1.1.0.dmg` are on the GitHub release;
-      the old ad-hoc-signed preview zip was removed. The DMG container
-      itself couldn't be separately code-signed (that private key only
-      lives inside Xcode's own automatic-signing session, not reachable
-      from a bare `codesign` call) — Apple's notarization docs say this is
-      fine for disk images, and the notary service accepted it regardless.
-      `docs/launch/homebrew-cask-galley.rb` now has the real sha256 and is
-      ready to submit: `brew bump-cask-pr --version 1.1.0 galley` (or open
-      a PR by hand against Homebrew/homebrew-cask).
+- [x] ~~Notarize the DMG~~ — done (see above; carried forward through
+      1.1.1). The DMG container itself couldn't be separately code-signed
+      (that private key only lives inside Xcode's own automatic-signing
+      session, not reachable from a bare `codesign` call) — Apple's
+      notarization docs say this is fine for disk images, and the notary
+      service accepted it regardless. Homebrew submission is still
+      blocked on repo stars, not signing (see the cask file's own header
+      for the exact gate).
 
 ## Phase 2, launch day (once the above is done)
 
