@@ -13,6 +13,7 @@
 		29418FC3951B4BC5B0957091 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */; };
 		2BF6BFB1B690925B6BB09486 /* MarkdownEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4D5B13503E00B2592D177D /* MarkdownEditorView.swift */; };
 		2E4DB8DDD63B784AFAED1908 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699DAEB53A36226A66941A53 /* DocumentView.swift */; };
+		3164270ADE7DA7C321B48A7B /* DefaultAppManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD5E31DB581EF06A416B9468 /* DefaultAppManager.swift */; };
 		49B89766E5FDCAA0A11B3713 /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FDC6009196E42173A91F6B /* PreviewProvider.swift */; };
 		5790F14C9C9C3E2A543E2FEE /* GalleyQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5B1C7BFFF7895D832C7A1A62 /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC6E4A973210A7FD021CDA2 /* FileWatcher.swift */; };
@@ -69,6 +70,7 @@
 		8C25DCB3CF9C94DAF603F469 /* GalleyQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GalleyQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4FBE38172AC19EECAA65E82 /* ql.bundle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ql.bundle.js; sourceTree = "<group>"; };
 		A5C80EA85526645430F3A8E8 /* ReaderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderModel.swift; sourceTree = "<group>"; };
+		BD5E31DB581EF06A416B9468 /* DefaultAppManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultAppManager.swift; sourceTree = "<group>"; };
 		C41A012669184BFDADC7A47C /* MarkdownSourceHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSourceHighlighter.swift; sourceTree = "<group>"; };
 		D2673CD79193012F4141D13C /* FolderAccessManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderAccessManager.swift; sourceTree = "<group>"; };
 		D9A03A09D7CB23B0A4E2A4AB /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				24EACAE2789328C8C3F2FA42 /* AppSettings.swift */,
+				BD5E31DB581EF06A416B9468 /* DefaultAppManager.swift */,
 				4FC6B850B9945D6F4008614D /* GalleyApp.swift */,
 				E637C4B90FB2575ECAE53B91 /* GalleyCommands.swift */,
 				6893B0E2A1F528F718526D46 /* MarkdownDocument.swift */,
@@ -287,6 +290,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D100249F11A1CC668085AF1 /* AppSettings.swift in Sources */,
+				3164270ADE7DA7C321B48A7B /* DefaultAppManager.swift in Sources */,
 				91B98FC3A80AE248389150B1 /* DocAssetSchemeHandler.swift in Sources */,
 				2E4DB8DDD63B784AFAED1908 /* DocumentView.swift in Sources */,
 				C44F792B068C35D097F760A0 /* Exporter.swift in Sources */,

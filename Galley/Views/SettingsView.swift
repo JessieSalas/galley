@@ -23,6 +23,9 @@ private struct ReadingSettings: View {
     @AppStorage(SettingsKeys.smartTypography) private var smartTypography = true
     @AppStorage(SettingsKeys.frontMatter) private var frontMatter = FrontMatterDisplay.card.rawValue
 
+    private enum DefaultAppState { case idle, working, succeeded, failed }
+    @State private var defaultAppState: DefaultAppState = .idle
+
     var body: some View {
         Form {
             Section {
@@ -43,11 +46,30 @@ private struct ReadingSettings: View {
                 }
             }
             Section("Default Markdown app") {
-                Text("To make Galley open every Markdown file: select any .md file in Finder, press ⌘I, choose Galley under “Open with,” then click **Change All**.")
-                    .font(.callout)
-                Text("macOS doesn't let sandboxed apps change this on your behalf — and Galley wouldn't grab it behind your back anyway.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack {
+                    Button("Set Galley as Default") {
+                        defaultAppState = .working
+                        DefaultAppManager.setGalleyAsDefault { success in
+                            defaultAppState = success ? .succeeded : .failed
+                        }
+                    }
+                    .disabled(defaultAppState == .working)
+                    if defaultAppState == .working {
+                        ProgressView().controlSize(.small)
+                    } else if defaultAppState == .succeeded {
+                        Label("Done", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.callout)
+                    }
+                }
+                if defaultAppState == .failed {
+                    Text("That didn't take. Do it by hand instead: select any .md file in Finder, press ⌘I, choose Galley under “Open with,” then click **Change All**.")
+                        .font(.callout)
+                } else {
+                    Text("Covers every Markdown extension (.md, .markdown, .mdown, .mkdn, .mkd) in one step. Galley never sets itself as default without you clicking this.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .formStyle(.grouped)
