@@ -29,6 +29,7 @@ struct ReaderWebView: NSViewRepresentable {
 
         let webView = GalleyWebView(frame: .zero, configuration: configuration)
         webView.onMoveToWindow = { [weak model] in
+            model?.applyInitialWindowSizeIfNeeded()
             model?.pushOptions()
         }
         webView.navigationDelegate = context.coordinator

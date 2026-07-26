@@ -113,6 +113,35 @@ final class ReaderModel: NSObject, ObservableObject {
 
     private var windowKeyObserver: NSObjectProtocol?
 
+    private var didSetInitialWindowSize = false
+
+    /// SwiftUI's `.defaultSize` on the DocumentGroup scene has no effect
+    /// here — empirically confirmed, a fresh window still lands at the
+    /// small ~900x450 DocumentGroup fallback regardless. Setting it
+    /// directly once the window actually exists is the only thing that
+    /// reliably works. Runs exactly once per window (guarded, and only
+    /// reachable via the one-time "just moved into a window" callback),
+    /// so it never fights a size the person picks by hand afterward.
+    func applyInitialWindowSizeIfNeeded() {
+        guard !didSetInitialWindowSize, let window = webView?.window else { return }
+        didSetInitialWindowSize = true
+        // DocumentGroup applies its own default window frame slightly after
+        // this callback fires, so setting the size synchronously here gets
+        // clobbered — hopping to the next run loop turn lets our size win.
+        DispatchQueue.main.async { [weak window] in
+            guard let window else { return }
+            let desired = NSSize(width: 1400, height: 920)
+            let visible = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
+                ?? NSRect(x: 0, y: 0, width: 1400, height: 920)
+            let size = NSSize(
+                width: min(desired.width, visible.width - 40),
+                height: min(desired.height, visible.height - 40)
+            )
+            window.setContentSize(size)
+            window.center()
+        }
+    }
+
     func attach(webView: WKWebView) {
         self.webView = webView
         observeFullScreen(of: webView)
