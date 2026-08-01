@@ -73,12 +73,31 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Thumbnail/Thumbnail.entitlements
         SKIP_INSTALL: true
 
+  GalleyTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - GalleyTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: do.thesis.galley.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Galley.app/Contents/MacOS/Galley"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: Galley
+        embed: false
+
 schemes:
   Galley:
     build:
       targets:
         Galley: all
+        GalleyTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - GalleyTests
     archive:
       config: Release

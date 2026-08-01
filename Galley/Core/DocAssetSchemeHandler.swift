@@ -38,8 +38,10 @@ final class DocAssetSchemeHandler: NSObject, WKURLSchemeHandler {
         liveTasks.insert(ObjectIdentifier(urlSchemeTask))
         lock.unlock()
 
-        let path = url.path.removingPercentEncoding ?? url.path
-        let standardized = (path as NSString).standardizingPath
+        // `URL.path` is already percent-decoded by Foundation — decoding it
+        // again mis-handles any literal "%XX"-shaped substring in a filename
+        // that happens to be valid UTF-8 once "decoded" a second time.
+        let standardized = (url.path as NSString).standardizingPath
         let fileURL = URL(fileURLWithPath: standardized)
 
         DispatchQueue.global(qos: .userInitiated).async { [documentURL, weak self] in

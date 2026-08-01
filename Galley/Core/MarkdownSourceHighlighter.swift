@@ -43,7 +43,7 @@ enum MarkdownSourceHighlighter {
             let lineRange = text.lineRange(for: NSRange(location: lineStart, length: 0))
             guard lineRange.length > 0 else { break }
             let trimmed = text.substring(with: lineRange).trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.hasPrefix("```") {
+            if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
                 if inFence {
                     codeRanges.append(NSRange(location: fenceStart, length: lineRange.location + lineRange.length - fenceStart))
                     inFence = false

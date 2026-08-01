@@ -33,12 +33,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // First launch with nothing to open: show the Welcome document instead
         // of a bare open panel, so the very first impression is the product.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            guard NSDocumentController.shared.documents.isEmpty else { return }
-            if !UserDefaults.standard.bool(forKey: "galley.hasLaunchedBefore") {
+        checkForFirstLaunch(checksRemaining: 3)
+    }
+
+    /// `documents.isEmpty` right after launch is a proxy for "nothing was
+    /// passed to open," not a guarantee — NSDocumentController's launch-time
+    /// open is documented as asynchronous, so a single 0.3s check can catch
+    /// a real document mid-open (slow/network volume) and show Welcome
+    /// alongside it. A few spaced checks give a genuinely in-flight open a
+    /// chance to land before committing either way.
+    private func checkForFirstLaunch(checksRemaining: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard !UserDefaults.standard.bool(forKey: "galley.hasLaunchedBefore") else { return }
+            guard NSDocumentController.shared.documents.isEmpty else {
+                UserDefaults.standard.set(true, forKey: "galley.hasLaunchedBefore")
+                return
+            }
+            guard checksRemaining > 1 else {
                 UserDefaults.standard.set(true, forKey: "galley.hasLaunchedBefore")
                 WelcomeOpener.openWelcome()
+                return
             }
+            self?.checkForFirstLaunch(checksRemaining: checksRemaining - 1)
         }
     }
 
@@ -61,8 +77,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 enum WelcomeOpener {
+    static var url: URL? {
+        Bundle.main.url(forResource: "Welcome", withExtension: "md", subdirectory: "Samples")
+    }
+
     static func openWelcome() {
-        guard let url = Bundle.main.url(forResource: "Welcome", withExtension: "md", subdirectory: "Samples") else { return }
+        guard let url else { return }
         NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
+    }
+
+    /// Used to gate the first-run onboarding sheet to the actual Welcome
+    /// document, never a file the user opened themselves.
+    static func isWelcome(_ candidate: URL?) -> Bool {
+        guard let candidate, let url else { return false }
+        return candidate.standardizedFileURL == url.standardizedFileURL
     }
 }

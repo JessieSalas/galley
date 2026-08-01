@@ -1,7 +1,8 @@
 # Distributing Galley
 
-Two channels, one codebase: notarized direct download (DMG) and the Mac App
-Store. The sandbox configuration is identical for both.
+Two channels, one codebase: notarized direct download (DMG + thesis.do +
+GitHub Releases) and the Mac App Store. The sandbox configuration is
+identical for both.
 
 ## 0. One-time setup
 
@@ -10,27 +11,43 @@ Store. The sandbox configuration is identical for both.
   `settings.base`, then `xcodegen generate`
 - Certificates: *Developer ID Application* (direct) and *Apple Distribution*
   (App Store), both via Xcode → Settings → Accounts
+- An App Store Connect API key (Users and Access → Integrations → App Store
+  Connect API, App Manager role or higher) — one key covers notarization,
+  App Store build upload, and review submission. Note its Key ID, Issuer ID,
+  and where the downloaded `AuthKey_<id>.p8` lives.
+- A local checkout of the `THESIS` repo (thesis.do's site, auto-deploys on
+  push to `main`) at `~/Projects/THESIS`, or set `THESIS_REPO` to point at
+  yours.
 
-## 1. Direct distribution (DMG + notarization)
+## 1. Standardized release: `scripts/release.sh`
+
+Everything below — archive, dual export, notarize, staple, package, and
+push to GitHub Releases + thesis.do + App Store Connect — is one script:
 
 ```bash
-# Archive
-xcodebuild -project Galley.xcodeproj -scheme Galley -configuration Release \
-  -archivePath build/Galley.xcarchive archive
-
-# Export with Developer ID signing
-xcodebuild -exportArchive -archivePath build/Galley.xcarchive \
-  -exportPath build/export -exportOptionsPlist docs/ExportOptions-developer-id.plist
-
-# Notarize (store credentials once with `xcrun notarytool store-credentials`)
-xcrun notarytool submit build/export/Galley.app --keychain-profile galley --wait
-xcrun stapler staple build/export/Galley.app
-
-# Package
-./scripts/make-dmg.sh build/export/Galley.app
+ASC_ISSUER_ID=<issuer-uuid> ./scripts/release.sh 1.1.5
 ```
 
-Publish the DMG on GitHub Releases. Then claim the Homebrew cask — the name
+It bumps `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` in `project.yml`,
+builds and verifies everything locally first, then pauses for an explicit
+`y/N` before each externally-visible step (pushing the tag/GitHub release,
+pushing thesis.do to production, and submitting to App Store review) — pass
+`--yes` to skip prompts once you've reviewed a run, or `--skip-github` /
+`--skip-thesis` / `--skip-appstore` to leave a channel out entirely. See the
+script's own comments for the full step list and environment variables
+(`ASC_KEY_ID`, `ASC_KEY_PATH`, `THESIS_REPO`).
+
+App Store Connect submission itself is driven by
+[`scripts/appstoreconnect.py`](../scripts/appstoreconnect.py) (called
+automatically by `release.sh`, or runnable standalone) via the current
+(2026) `reviewSubmissions` API — upload, wait for processing, attach the
+build to the version, submit. It expects the App Store version (with its
+"What's New" text) to already exist in App Store Connect; creating that is
+still a two-minute dashboard step since it clones the prior version's
+metadata. Run `python3 scripts/appstoreconnect.py status --key-id ... --issuer-id ... --key-path ...`
+any time for a read-only check of the app's current versions/builds.
+
+Once a release ships, claim the Homebrew cask if you haven't yet — the name
 `galley` was verified unclaimed (2026-07):
 
 ```bash
@@ -41,8 +58,6 @@ brew bump-cask-pr --version 1.0.0 galley   # after submitting the new cask
 
 - **Listing name**: `Galley — Markdown Reader` (bare "Galley" is held by an
   out-of-category food app; the suffixed form is standard practice)
-- Archive with the same scheme, choose *App Store Connect* in Organizer (or
-  `-exportOptionsPlist` with `method: app-store-connect`)
 - Metadata and review notes: [appstore/metadata.md](appstore/metadata.md)
 
 ### Review notes to include verbatim
@@ -60,16 +75,23 @@ brew bump-cask-pr --version 1.0.0 galley   # after submitting the new cask
 
 - Rank is `Alternate` for `net.daringfireball.markdown` — Galley never seizes
   the user's default handler
-- No "set as default" button — sandboxed `NSWorkspace.setDefaultApplication`
-  fails with `permErr`; Settings shows Get Info → Change All guidance instead
+- "Set as Default" (Settings → Reading, and offered once during first-run
+  onboarding) calls the sanctioned `NSWorkspace.setDefaultApplication` API —
+  works fine sandboxed despite older reports of `permErr`, is always
+  user-tap-initiated, never automatic, and only ever asked once
 - `ITSAppUsesNonExemptEncryption` is `NO`
 - Print uses `printOperation(with:)` with the explicit `view.frame` assignment
   (macOS 26 crash workaround)
 - Quick Look extension never fights the sandbox for sibling images
 - Test double-click open of a file in `~/Downloads` (quarantined) — renders
   with zero dialogs
+- **Guideline 4 (rejected on 1.1.0):** closing the last document window left
+  no menu item to reopen one. Fixed by adding the existing "Welcome to
+  Galley" action to the Window menu (`CommandGroup(after: .windowArrangement)`
+  in `GalleyCommands.swift`), not just Help.
 
 ## 3. Versioning
 
-Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml`,
+`scripts/release.sh <version>` handles this. To do it by hand: bump
+`MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml`,
 `xcodegen generate`, commit, tag `v<version>`.

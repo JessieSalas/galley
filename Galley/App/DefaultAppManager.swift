@@ -17,4 +17,15 @@ enum DefaultAppManager {
             }
         }
     }
+
+    /// Whether Galley is already the registered handler for `.markdownDoc` —
+    /// used to skip the first-run prompt for anyone who set this from
+    /// Settings (or a prior launch) already. Standardized on both sides,
+    /// same as WelcomeOpener.isWelcome — these two URLs come from different
+    /// APIs (Launch Services vs. the running bundle) and plain `==` doesn't
+    /// tolerate the kind of path differences that can appear between them.
+    static var isGalleyDefault: Bool {
+        guard let registered = NSWorkspace.shared.urlForApplication(toOpen: .markdownDoc) else { return false }
+        return registered.standardizedFileURL == Bundle.main.bundleURL.standardizedFileURL
+    }
 }

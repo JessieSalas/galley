@@ -337,6 +337,11 @@ function mermaidThemeVariables() {
 }
 
 let mermaidRenderSeq = 0;
+// Keyed by theme + source, so a live-tailed document with several diagrams
+// doesn't re-run the expensive mermaid.render on every unchanged diagram for
+// every append — only genuinely new/changed diagrams (or a theme switch,
+// which changes the key) pay the cost.
+const mermaidSvgCache = new Map();
 
 async function renderMermaidBlocks(root) {
   const blocks = root.querySelectorAll(".mermaid-block[data-mermaid]");
@@ -346,18 +351,27 @@ async function renderMermaidBlocks(root) {
     await loadScript("vendor/mermaid.min.js");
     state.mermaidLoaded = true;
   }
+  const themeVariables = mermaidThemeVariables();
   window.mermaid.initialize({
     startOnLoad: false,
     securityLevel: "strict",
     theme: "base",
-    themeVariables: mermaidThemeVariables(),
+    themeVariables,
   });
+  const themeKey = JSON.stringify(themeVariables);
 
   for (const block of blocks) {
     const src = decodeURIComponent(block.dataset.mermaid);
+    const cacheKey = themeKey + " " + src;
+    const cached = mermaidSvgCache.get(cacheKey);
+    if (cached) {
+      block.innerHTML = cached;
+      continue;
+    }
     const id = `mmd-${++mermaidRenderSeq}`;
     try {
       const { svg } = await window.mermaid.render(id, src);
+      mermaidSvgCache.set(cacheKey, svg);
       block.innerHTML = svg;
     } catch (err) {
       // mermaid.render leaves a dangling error element; remove it
@@ -370,11 +384,23 @@ async function renderMermaidBlocks(root) {
   }
 }
 
+// Strips fenced (``` or ~~~) and inline (`...`) code spans before the
+// "is this document mathy" heuristic below runs, so a documentation sample
+// that merely shows LaTeX source or a stray "$" can't flip on single-"$"
+// math parsing for prose anywhere else in the document. Heuristic-only —
+// the actual render still walks the real DOM further down.
+function stripCodeForMathHeuristic(text) {
+  return text
+    .replace(/^([ \t]*)(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\2[ \t]*$/gm, "")
+    .replace(/`[^`\n]*`/g, "");
+}
+
 async function renderMath(root) {
   // A document is "mathy" only if it uses display math or TeX commands —
   // this keeps "$5 and $10" prose from turning into accidental equations.
-  const mathy = /\$\$|\\\(|\\\[|\\begin\{/.test(state.raw);
-  const hasDollar = mathy && /\$[^\s$]/.test(state.raw);
+  const proseForHeuristic = stripCodeForMathHeuristic(state.raw);
+  const mathy = /\$\$|\\\(|\\\[|\\begin\{/.test(proseForHeuristic);
+  const hasDollar = mathy && /\$[^\s$]/.test(proseForHeuristic);
   const mathBlocks = root.querySelectorAll(".math-block[data-math]");
   if (!mathy && !mathBlocks.length) return;
 
@@ -395,17 +421,70 @@ async function renderMath(root) {
   }
 
   if (mathy && window.renderMathInElement) {
-    const delimiters = [
-      { left: "$$", right: "$$", display: true },
-      { left: "\\[", right: "\\]", display: true },
-      { left: "\\(", right: "\\)", display: false },
-    ];
-    if (hasDollar) delimiters.push({ left: "$", right: "$", display: false });
+    // $$, \[...\], \(...\) are unambiguous — never how prose writes a
+    // literal dollar amount — so KaTeX's own nearest-pair matching is fine
+    // for them. Single "$" is not: it's also how "$5 and $10" is written,
+    // and once a document is "mathy" for any of the unambiguous reasons
+    // above, renderMathInElement's single-$ mode has no boundary guard at
+    // all and will happily eat unrelated prose dollar amounts anywhere else
+    // in the same document. That gets its own conservative scan instead.
     window.renderMathInElement(root, {
-      delimiters,
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
+      ],
       throwOnError: false,
       ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
     });
+  }
+
+  if (hasDollar) renderSingleDollarMath(root);
+}
+
+// Pandoc's own rule for bare "$...$" math, applied here for the same reason
+// Pandoc needs it: distinguishing "$e^{i\pi}$" from "$5 and $10". The
+// opening $ must be followed by a non-space character, the closing $ must
+// be preceded by a non-space character, and the closing $ must not be
+// immediately followed by a digit (which is exactly what rules out reading
+// "...$10" as a closing delimiter for money written as "$5 ... $10").
+const SINGLE_DOLLAR_MATH = /\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)/g;
+
+function renderSingleDollarMath(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      return node.parentElement?.closest("pre, code, script, style, .katex")
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  const textNodes = [];
+  for (let n; (n = walker.nextNode()); ) {
+    if (n.nodeValue.includes("$")) textNodes.push(n);
+  }
+
+  for (const node of textNodes) {
+    const text = node.nodeValue;
+    SINGLE_DOLLAR_MATH.lastIndex = 0;
+    let match;
+    let last = 0;
+    let matched = false;
+    const frag = document.createDocumentFragment();
+    while ((match = SINGLE_DOLLAR_MATH.exec(text))) {
+      matched = true;
+      frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+      const span = document.createElement("span");
+      try {
+        window.katex.render(match[1], span, { displayMode: false, throwOnError: false });
+      } catch (_) {
+        span.textContent = match[0];
+      }
+      frag.appendChild(span);
+      last = match.index + match[0].length;
+    }
+    if (!matched) continue;
+    frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag, node);
   }
 }
 

@@ -152,6 +152,18 @@ Footnotes tuck away politely[^1], and a second one for good measure[^2].
 ## The long tail
 
 After the fold, long documents should stay fast and legible. The reader keeps your scroll position on live reload, follows the tail when an agent is still writing, and never asks you to configure anything first.
+
+## Math-heuristic regression check
+
+This code sample shows LaTeX source without meaning to turn on math mode elsewhere in the document:
+
+```text
+\begin{equation}
+E = mc^2
+\end{equation}
+```
+
+This add-on costs $5 and the pro tier is $10 a month — this is plain prose, not math, and should render as plain text, not a KaTeX error.
 </script>
 
 <script src="../Galley/Resources/web/reader.bundle.js"></script>

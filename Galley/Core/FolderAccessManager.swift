@@ -34,7 +34,14 @@ final class FolderAccessManager {
                 continue
             }
             if stale, let fresh = try? url.bookmarkData(options: .withSecurityScope) {
-                store[path] = fresh
+                // Re-key to the resolved path, matching `active` — otherwise
+                // a renamed/moved folder leaves the refreshed bookmark under
+                // its old path forever, and revoke(path:) (called with the
+                // new path from `active.keys`) silently misses it.
+                if url.path != path {
+                    store.removeValue(forKey: path)
+                }
+                store[url.path] = fresh
                 changed = true
             }
             if url.startAccessingSecurityScopedResource() {

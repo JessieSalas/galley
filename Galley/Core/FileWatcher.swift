@@ -22,7 +22,12 @@ final class FileWatcher {
         self.url = url
         self.onChange = onChange
         self.onInvalidate = onInvalidate
-        queue.async { [weak self] in self?.attach(retriesLeft: 0, afterReplace: false) }
+        // Give the very first attach the same retry budget as a post-replace
+        // reattach — a transient open() failure here (e.g. a not-yet-fully-
+        // materialized iCloud file) used to give up permanently with no
+        // retry and no onInvalidate call, leaving isWatching stuck true for
+        // a file nothing was ever actually watching.
+        queue.async { [weak self] in self?.attach(retriesLeft: 10, afterReplace: false) }
     }
 
     /// Runs on `queue`.
@@ -36,7 +41,7 @@ final class FileWatcher {
                 queue.asyncAfter(deadline: .now() + .milliseconds(150)) { [weak self] in
                     self?.attach(retriesLeft: retriesLeft - 1, afterReplace: afterReplace)
                 }
-            } else if afterReplace {
+            } else {
                 DispatchQueue.main.async(execute: onInvalidate)
             }
             return

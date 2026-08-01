@@ -54,9 +54,15 @@ struct GalleyCommands: Commands {
     @AppStorage(SettingsKeys.measure) private var measure = Measure.normal.rawValue
     /// Observed so plain items' disabled states refresh as windows come and go.
     @ObservedObject private var tracker = ActiveModelTracker.shared
+    /// Observed so Export/Print disable while the onboarding sheet is up —
+    /// AppKit queues a second sheet on a window that already has one rather
+    /// than rejecting it, so it would otherwise pop open, unannounced, the
+    /// moment the onboarding sheet is dismissed.
+    @ObservedObject private var onboarding = OnboardingCoordinator.shared
 
     /// Read at action time, never captured — always the frontmost document.
     private var model: ReaderModel? { tracker.current }
+    private var exportDisabled: Bool { model == nil || onboarding.isPresentingAnywhere }
 
     var body: some Commands {
         // Viewer: no "New Document"; the system supplies Open/Open Recent.
@@ -79,13 +85,13 @@ struct GalleyCommands: Commands {
                 if let model { Exporter.exportPDF(model: model) }
             }
             .keyboardShortcut("e", modifiers: [.command, .option])
-            .disabled(model == nil)
+            .disabled(exportDisabled)
 
             Button("Export as HTML…") {
                 if let model { Exporter.exportHTML(model: model) }
             }
             .keyboardShortcut("e", modifiers: [.command, .option, .shift])
-            .disabled(model == nil)
+            .disabled(exportDisabled)
 
             Divider()
 
@@ -93,7 +99,7 @@ struct GalleyCommands: Commands {
                 if let model { Exporter.printDocument(model: model) }
             }
             .keyboardShortcut("p", modifiers: .command)
-            .disabled(model == nil)
+            .disabled(exportDisabled)
         }
 
         CommandGroup(after: .pasteboard) {
@@ -179,6 +185,16 @@ struct GalleyCommands: Commands {
                 .disabled(model == nil)
 
             PresentToggleMenuItem()
+        }
+
+        // Guideline 4 (App Review): closing the last document window must
+        // leave a way back in without relaunching. The Help menu item below
+        // already does this; Apple's rejection specifically wants it (or
+        // equivalent) reachable from the Window menu, so it lives in both.
+        CommandGroup(after: .windowArrangement) {
+            Button("Welcome to Galley") {
+                WelcomeOpener.openWelcome()
+            }
         }
 
         CommandGroup(replacing: .help) {

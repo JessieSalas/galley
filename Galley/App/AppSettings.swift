@@ -52,9 +52,9 @@ enum SettingsKeys {
 }
 
 extension UserDefaults {
-    static func registerGalleyDefaults() {
-        migrateLegacyAppearance()
-        UserDefaults.standard.register(defaults: [
+    static func registerGalleyDefaults(_ defaults: UserDefaults = .standard) {
+        migrateLegacyAppearance(defaults)
+        defaults.register(defaults: [
             SettingsKeys.theme: "thesis",
             SettingsKeys.mode: AppearanceMode.system.rawValue,
             SettingsKeys.textScale: 1.0,
@@ -71,8 +71,7 @@ extension UserDefaults {
     /// One-shot migration from the old "galley.appearance" (system/paper/ink)
     /// setting to "galley.mode" (system/light/dark). Silent — runs once,
     /// since the old key is removed afterward.
-    private static func migrateLegacyAppearance() {
-        let d = UserDefaults.standard
+    static func migrateLegacyAppearance(_ d: UserDefaults = .standard) {
         guard let old = d.string(forKey: "galley.appearance") else { return }
         switch old {
         case "paper": d.set(AppearanceMode.light.rawValue, forKey: SettingsKeys.mode)

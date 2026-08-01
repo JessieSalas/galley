@@ -11,6 +11,13 @@ struct DocumentView: View {
     @State private var sidebarManuallyChangedWhilePresenting = false
     @State private var showInfo = false
     @State private var showTypePopover = false
+    @ObservedObject private var onboarding = OnboardingCoordinator.shared
+    // Identifies this window to OnboardingCoordinator so at most one window
+    // ever presents the prompt, and dismissing it can't affect any other.
+    // @State, not a plain let: SwiftUI recreates this View struct on every
+    // re-render, and only @State storage survives that across the view's
+    // actual lifetime (same reason `model` above is a @StateObject).
+    @State private var onboardingOwnerID = UUID()
 
     init(document: MarkdownDocument, fileURL: URL?) {
         _model = StateObject(wrappedValue: ReaderModel(text: document.text, fileURL: fileURL))
@@ -26,7 +33,21 @@ struct DocumentView: View {
         .navigationSubtitle(subtitle)
         .toolbar { toolbarContent }
         .focusedSceneValue(\.readerModel, model)
-        .onDisappear { model.saveScrollPosition() }
+        .onDisappear {
+            model.saveScrollPosition()
+            onboarding.releaseIfOwner(onboardingOwnerID)
+        }
+        .onAppear {
+            if WelcomeOpener.isWelcome(model.fileURL) {
+                onboarding.presentIfNeeded(owner: onboardingOwnerID)
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { onboarding.isPresenting(owner: onboardingOwnerID) },
+            set: { isPresented in if !isPresented { onboarding.dismiss(owner: onboardingOwnerID) } }
+        )) {
+            OnboardingDefaultAppView(onFinished: { onboarding.dismiss(owner: onboardingOwnerID) })
+        }
         // Presentation is a clean reading surface, not the windowed layout
         // just stretched fullscreen — the outline sidebar's own scroll
         // indicator was riding along next to the document's, reading as a
