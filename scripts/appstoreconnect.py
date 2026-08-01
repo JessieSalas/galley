@@ -26,6 +26,8 @@ Usage:
         [--no-submit] [--bundle-id do.thesis.galley] [--poll-seconds 600]
 """
 import argparse
+import os
+import pathlib
 import subprocess
 import sys
 import time
@@ -84,17 +86,24 @@ def find_version(asc, app_id, version):
 
 
 def most_recent_version(asc, app_id):
-    data = asc.get(f"/apps/{app_id}/appStoreVersions", limit=1, sort="-createdDate")["data"]
+    # `sort` isn't a valid query param on this list endpoint (400s) — fetch
+    # and sort client-side instead.
+    data = asc.get(f"/apps/{app_id}/appStoreVersions", limit=50)["data"]
     if not data:
         sys.exit("error: no prior App Store version to clone metadata from")
-    return data[0]
+    return max(data, key=lambda v: v["attributes"]["createdDate"])
 
 
 def create_version(asc, app_id, version, whats_new):
     """Creates a new appStoreVersions entry and clones the most recent
     version's localizations (description/keywords/etc.), so a brand-new
     version doesn't need a manual dashboard visit just to carry forward
-    metadata that hasn't changed. Only `whats_new` is genuinely new."""
+    metadata that hasn't changed. Only `whats_new` is genuinely new.
+
+    Apple rejects this (409, ENTITY_ERROR.RELATIONSHIP.INVALID) if a prior
+    version is still "open" (e.g. REJECTED, PREPARE_FOR_SUBMISSION) — an app
+    can only have one version in flight at a time. Callers should catch
+    requests.exceptions.HTTPError and fall back to reuse_version()."""
     source = most_recent_version(asc, app_id)
     print(f"==> No App Store version '{version}' yet — creating one, cloning metadata from {source['attributes']['versionString']}")
 
@@ -111,8 +120,13 @@ def create_version(asc, app_id, version, whats_new):
         }
     })
     version_id = created["data"]["id"]
+    clone_localizations(asc, source["id"], version_id, whats_new)
+    print(f"==> Created version {version} ({version_id})")
+    return version_id
 
-    source_locs = asc.get(f"/appStoreVersions/{source['id']}/appStoreVersionLocalizations")["data"]
+
+def clone_localizations(asc, source_version_id, dest_version_id, whats_new):
+    source_locs = asc.get(f"/appStoreVersions/{source_version_id}/appStoreVersionLocalizations")["data"]
     for loc in source_locs:
         a = loc["attributes"]
         asc.post("/appStoreVersionLocalizations", {
@@ -127,46 +141,100 @@ def create_version(asc, app_id, version, whats_new):
                     "supportUrl": a["supportUrl"],
                     "whatsNew": whats_new,
                 },
-                "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}},
+                "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": dest_version_id}}},
             }
         })
-    print(f"==> Created version {version} ({version_id}), cloned {len(source_locs)} localization(s)")
+    print(f"==> Cloned {len(source_locs)} localization(s)")
+
+
+def reuse_version(asc, source, version, whats_new):
+    """A prior version (e.g. REJECTED) is still open, so Apple won't let a
+    new one be created alongside it — the normal post-rejection flow is to
+    edit that version in place (version string included) and resubmit, not
+    create a sibling. Only PATCHes versionString here — whatsNew is rejected
+    by the API ("cannot be edited at this time") until a build is attached,
+    so the caller sets it later via set_whats_new()."""
+    version_id = source["id"]
+    old_version_string = source["attributes"]["versionString"]
+    print(f"==> Version {old_version_string} ({source['attributes']['appStoreState']}) is still open — updating it to {version} in place instead of creating a new one")
+
+    asc.patch(f"/appStoreVersions/{version_id}", {
+        "data": {
+            "type": "appStoreVersions",
+            "id": version_id,
+            "attributes": {"versionString": version},
+        }
+    })
+    print(f"==> Renamed to version {version} ({version_id})")
     return version_id
+
+
+def set_whats_new(asc, version_id, whats_new):
+    if not whats_new:
+        return
+    locs = asc.get(f"/appStoreVersions/{version_id}/appStoreVersionLocalizations")["data"]
+    for loc in locs:
+        try:
+            asc.patch(f"/appStoreVersionLocalizations/{loc['id']}", {
+                "data": {
+                    "type": "appStoreVersionLocalizations",
+                    "id": loc["id"],
+                    "attributes": {"whatsNew": whats_new},
+                }
+            })
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 409:
+                # Apple rejects whatsNew on an app's first-ever version —
+                # there's nothing prior to describe a change from. Not
+                # fatal: everything else about the submission still stands.
+                print("==> Skipping 'What's New' — not editable yet (likely this app's first real version)")
+                return
+            raise
+    print(f"==> Set 'What's New' on {len(locs)} localization(s)")
 
 
 def find_or_create_version(asc, app_id, version, whats_new):
     existing = find_version(asc, app_id, version)
     if existing:
-        return existing
+        return existing, False
     if not whats_new:
         sys.exit(
             f"error: no App Store version '{version}' exists yet, and --whats-new wasn't given "
             f"to auto-create one. Either pass --whats-new \"...\", or create the version by hand "
             f"in App Store Connect first."
         )
-    return create_version(asc, app_id, version, whats_new)
+    try:
+        return create_version(asc, app_id, version, whats_new), True
+    except requests.exceptions.HTTPError as e:
+        if e.response is None or e.response.status_code != 409:
+            raise
+        return reuse_version(asc, most_recent_version(asc, app_id), version, whats_new), False
 
 
-def upload_build(pkg_path, app_id, bundle_id, version, build_number, key_id, issuer_id):
-    print(f"==> Uploading {pkg_path} via altool (build {build_number}, version {version})")
+def upload_build(pkg_path, key_id, issuer_id, key_path):
+    # Current altool (verified against this machine's Xcode) takes no
+    # bundle-id/version/type flags for --upload-package at all — the .pkg
+    # already carries that metadata — and uses --api-key/--api-issuer, not
+    # the older --apiKey/--apiIssuer. It also only looks for the .p8 file in
+    # a few fixed locations (or $API_PRIVATE_KEYS_DIR), not an arbitrary path.
+    print(f"==> Uploading {pkg_path} via altool")
+    env = {**os.environ, "API_PRIVATE_KEYS_DIR": str(pathlib.Path(key_path).parent)}
     cmd = [
         "xcrun", "altool", "--upload-package", pkg_path,
-        "--type", "macos",
-        "--apple-id", app_id,
-        "--bundle-id", bundle_id,
-        "--bundle-version", build_number,
-        "--bundle-short-version-string", version,
-        "--apiKey", key_id,
-        "--apiIssuer", issuer_id,
+        "--api-key", key_id,
+        "--api-issuer", issuer_id,
+        "--wait",
     ]
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, env=env)
 
 
 def wait_for_build(asc, app_id, build_number, poll_seconds):
     print(f"==> Waiting for build {build_number} to finish processing (up to {poll_seconds}s)")
     deadline = time.time() + poll_seconds
     while time.time() < deadline:
-        data = asc.get(f"/apps/{app_id}/builds", **{"filter[version]": build_number})["data"]
+        # Top-level /builds, not the nested /apps/{id}/builds route — the
+        # latter 400s on filter[version] ("parameter not allowed").
+        data = asc.get("/builds", **{"filter[app]": app_id, "filter[version]": build_number})["data"]
         if data:
             state = data[0]["attributes"]["processingState"]
             print(f"    processingState={state}")
@@ -190,9 +258,15 @@ def attach_build(asc, version_id, build_id):
 
 
 def existing_open_submission(asc, app_id):
+    # A submission whose state is UNRESOLVED_ISSUES (i.e. a prior rejection)
+    # LOOKS unsubmitted (submitted=false) but is actually terminal: its
+    # rejected item can't be deleted via this API ("Item was already
+    # submitted") and no new item can be added to the submission itself
+    # ("state does not allow adding more items"). Only a genuinely fresh,
+    # empty READY_FOR_REVIEW submission is safe to reuse.
     data = asc.get("/reviewSubmissions", **{"filter[app]": app_id}).get("data", [])
     for s in data:
-        if not s["attributes"].get("submitted"):
+        if not s["attributes"].get("submitted") and s["attributes"].get("state") == "READY_FOR_REVIEW":
             return s["id"]
     return None
 
@@ -212,15 +286,27 @@ def submit_for_review(asc, app_id, version_id):
         submission_id = resp["data"]["id"]
 
     print("==> Adding version to submission")
-    asc.post("/reviewSubmissionItems", {
-        "data": {
-            "type": "reviewSubmissionItems",
-            "relationships": {
-                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission_id}},
-                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}},
-            },
-        }
-    })
+    try:
+        asc.post("/reviewSubmissionItems", {
+            "data": {
+                "type": "reviewSubmissionItems",
+                "relationships": {
+                    "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": submission_id}},
+                    "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}},
+                },
+            }
+        })
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 409:
+            sys.exit(
+                "error: this version is still linked to an earlier rejected review submission, and the "
+                "App Store Connect API has no way to detach it (the dashboard's own 'remove rejected "
+                "items' action isn't exposed via the API). Finish this one manually: App Store Connect "
+                "-> this app -> App Review Issues & Messages -> remove the rejected item (or Edit -> "
+                "Add for Review -> Resubmit to App Review). The build is already uploaded and attached; "
+                "this is just the last click."
+            )
+        raise
 
     print("==> Submitting for review")
     asc.patch(f"/reviewSubmissions/{submission_id}", {
@@ -248,12 +334,13 @@ def cmd_status(args):
 def cmd_submit(args):
     asc = ASC(args.key_id, args.issuer_id, args.key_path)
     app_id = find_app(asc, args.bundle_id)
-    version_id = find_or_create_version(asc, app_id, args.version, args.whats_new)
+    version_id, whats_new_set = find_or_create_version(asc, app_id, args.version, args.whats_new)
 
-    upload_build(args.pkg, app_id, args.bundle_id, args.version, args.build_number,
-                 args.key_id, args.issuer_id)
+    upload_build(args.pkg, args.key_id, args.issuer_id, args.key_path)
     build_id = wait_for_build(asc, app_id, args.build_number, args.poll_seconds)
     attach_build(asc, version_id, build_id)
+    if not whats_new_set:
+        set_whats_new(asc, version_id, args.whats_new)
 
     if args.no_submit:
         print("==> --no-submit set: build attached, stopping before review submission.")

@@ -79,17 +79,19 @@ mkdir -p "$BUILD_DIR"
 
 echo "==> Archive"
 xcodebuild -project Galley.xcodeproj -scheme Galley -configuration Release \
-    -archivePath "$BUILD_DIR/Galley.xcarchive" archive
+    -archivePath "$BUILD_DIR/Galley.xcarchive" -allowProvisioningUpdates archive
 
 echo "==> Export: Developer ID (direct download)"
 xcodebuild -exportArchive -archivePath "$BUILD_DIR/Galley.xcarchive" \
     -exportPath "$BUILD_DIR/export-developer-id" \
-    -exportOptionsPlist docs/ExportOptions-developer-id.plist
+    -exportOptionsPlist docs/ExportOptions-developer-id.plist \
+    -allowProvisioningUpdates
 
 echo "==> Export: App Store Connect"
 xcodebuild -exportArchive -archivePath "$BUILD_DIR/Galley.xcarchive" \
     -exportPath "$BUILD_DIR/export-appstore" \
-    -exportOptionsPlist docs/ExportOptions-app-store-connect.plist
+    -exportOptionsPlist docs/ExportOptions-app-store-connect.plist \
+    -allowProvisioningUpdates
 
 APP="$BUILD_DIR/export-developer-id/Galley.app"
 
