@@ -34,7 +34,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 THESIS_REPO="${THESIS_REPO:-$HOME/Projects/THESIS}"
-ASC_KEY_ID="${ASC_KEY_ID:-KL448V4YTJ}"
+ASC_KEY_ID="${ASC_KEY_ID:-43S9AKM5N9}"
 ASC_ISSUER_ID="${ASC_ISSUER_ID:?set ASC_ISSUER_ID (App Store Connect API issuer UUID)}"
 ASC_KEY_PATH="${ASC_KEY_PATH:-$HOME/Downloads/AuthKey_${ASC_KEY_ID}.p8}"
 ASC_WHATS_NEW="${ASC_WHATS_NEW:-}"
@@ -71,6 +71,20 @@ if ! git diff --quiet -- web/src 2>/dev/null; then
     echo "error: web/src changed but committed bundles weren't rebuilt — run web/build.sh first" >&2
     exit 1
 fi
+
+# appstoreconnect.py needs pyjwt/cryptography/requests, which the system
+# python3 does not have. Discovering that at the final step, after a build
+# and two notarizations, is the worst possible time — so build the venv now
+# and prove the imports work before anything slow starts.
+ASC_VENV="$ROOT/build/.ascvenv"
+if [[ ! -x "$ASC_VENV/bin/python" ]]; then
+    echo "==> Creating Python venv for App Store Connect deps"
+    python3 -m venv "$ASC_VENV"
+fi
+"$ASC_VENV/bin/pip" install -q pyjwt cryptography requests
+"$ASC_VENV/bin/python" -c "import jwt, requests" || {
+    echo "error: App Store Connect Python deps unavailable" >&2; exit 1; }
+ASC_PY="$ASC_VENV/bin/python"
 
 echo "==> Tests"
 # Runs before the version bump so a red suite stops the release without
@@ -133,12 +147,17 @@ echo "  $BUILD_DIR/Galley-$VERSION.dmg"
 echo "  $BUILD_DIR/Galley-$VERSION.zip"
 echo "  $BUILD_DIR/export-appstore/Galley.pkg"
 
+SHIPPED_GITHUB=false
+SHIPPED_THESIS=false
+SHIPPED_APPSTORE=false
+
 if ! $SKIP_GITHUB; then
     if confirm "Push v$VERSION to origin/main and publish a public GitHub release with the DMG+zip?"; then
         git push origin main --tags
         gh release create "v$VERSION" \
             "$BUILD_DIR/Galley-$VERSION.dmg" "$BUILD_DIR/Galley-$VERSION.zip" \
             --title "Galley $VERSION" --generate-notes
+        SHIPPED_GITHUB=true
     else
         echo "  skipped (commit/tag remain local — push manually with: git push origin main --tags)"
     fi
@@ -158,6 +177,7 @@ if ! $SKIP_THESIS; then
         fi
         git -C "$THESIS_REPO" commit -m "Ship Galley $VERSION"
         git -C "$THESIS_REPO" push origin main
+        SHIPPED_THESIS=true
     else
         echo "  skipped"
     fi
@@ -165,15 +185,33 @@ fi
 
 if ! $SKIP_APPSTORE; then
     if confirm "Upload build $NEW_BUILD (v$VERSION) to App Store Connect and submit for review?"; then
-        python3 "$ROOT/scripts/appstoreconnect.py" submit \
+        "$ASC_PY" "$ROOT/scripts/appstoreconnect.py" submit \
             --version "$VERSION" \
             --pkg "$BUILD_DIR/export-appstore/Galley.pkg" \
             --key-id "$ASC_KEY_ID" --issuer-id "$ASC_ISSUER_ID" --key-path "$ASC_KEY_PATH" \
             ${ASC_WHATS_NEW:+--whats-new "$ASC_WHATS_NEW"} \
             ${ASC_REVIEW_NOTES:+--review-notes "$ASC_REVIEW_NOTES"}
+        SHIPPED_APPSTORE=true
     else
         echo "  skipped — the exported .pkg is at $BUILD_DIR/export-appstore/Galley.pkg"
     fi
+fi
+
+# A release that reaches only some channels is how 1.1.5 ended up live on
+# the App Store while GitHub had no tag and thesis.do still served 1.1.4.
+# The three ship together or the run is reported as a failure.
+echo
+echo "==> Channel summary for v$VERSION"
+status_line() { $2 && echo "    shipped     $1" || echo "    NOT SHIPPED $1"; }
+status_line "GitHub release + origin/main" $SHIPPED_GITHUB
+status_line "thesis.do (THESIS repo)" $SHIPPED_THESIS
+status_line "App Store Connect" $SHIPPED_APPSTORE
+
+if ! $SHIPPED_GITHUB || ! $SHIPPED_THESIS || ! $SHIPPED_APPSTORE; then
+    echo
+    echo "error: v$VERSION did not reach every channel, so they are now out of sync." >&2
+    echo "       Re-run the missing channel(s) before considering this release done." >&2
+    exit 1
 fi
 
 echo "==> Done"
