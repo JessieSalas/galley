@@ -24,16 +24,26 @@ final class OnboardingCoordinator: ObservableObject {
 
     private let hasPromptedKey = "galley.hasPromptedDefaultApp"
     private let defaults: UserDefaults
+    /// Injected rather than read straight from DefaultAppManager so the
+    /// prompt logic is testable. Reading the real LaunchServices
+    /// registration made the tests depend on how the machine running them
+    /// happens to be configured: once Galley actually was the default
+    /// Markdown reader, five of them started failing and blocked a release.
+    private let isAlreadyDefault: () -> Bool
 
-    init(defaults: UserDefaults = .standard) {
+    init(
+        defaults: UserDefaults = .standard,
+        isAlreadyDefault: @escaping () -> Bool = { DefaultAppManager.isGalleyDefault }
+    ) {
         self.defaults = defaults
+        self.isAlreadyDefault = isAlreadyDefault
     }
 
     func presentIfNeeded(owner: UUID) {
         guard presentingOwner == nil else { return }
         guard !defaults.bool(forKey: hasPromptedKey) else { return }
         // Don't nag someone who already set this from Settings themselves.
-        guard !DefaultAppManager.isGalleyDefault else {
+        guard !isAlreadyDefault() else {
             defaults.set(true, forKey: hasPromptedKey)
             return
         }

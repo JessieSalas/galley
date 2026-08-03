@@ -12,6 +12,14 @@ final class OnboardingCoordinatorTests: XCTestCase {
         defaults = UserDefaults(suiteName: suiteName)
     }
 
+    /// Explicitly "Galley is not yet the default" — the state these tests
+    /// mean to exercise. Left implicit, it resolved to the real
+    /// LaunchServices registration and the suite passed or failed depending
+    /// on the machine.
+    private func makeCoordinator(alreadyDefault: Bool = false) -> OnboardingCoordinator {
+        OnboardingCoordinator(defaults: defaults, isAlreadyDefault: { alreadyDefault })
+    }
+
     override func tearDown() {
         defaults.removePersistentDomain(forName: suiteName)
         defaults = nil
@@ -19,19 +27,17 @@ final class OnboardingCoordinatorTests: XCTestCase {
     }
 
     func testPresentsOnFirstCall() {
-        let coordinator = OnboardingCoordinator(defaults: defaults)
+        let coordinator = makeCoordinator()
         let windowA = UUID()
         XCTAssertFalse(coordinator.isPresenting(owner: windowA))
 
         coordinator.presentIfNeeded(owner: windowA)
 
-        // Galley is never the registered default handler in a test runner,
-        // so the only gate left is "have we ever asked" — which is false.
         XCTAssertTrue(coordinator.isPresenting(owner: windowA))
     }
 
     func testNeverAsksTwice() {
-        let coordinator = OnboardingCoordinator(defaults: defaults)
+        let coordinator = makeCoordinator()
         let windowA = UUID()
         coordinator.presentIfNeeded(owner: windowA)
         coordinator.dismiss(owner: windowA)
@@ -44,14 +50,14 @@ final class OnboardingCoordinatorTests: XCTestCase {
     }
 
     func testDismissPersistsAcrossInstances() {
-        let priorSession = OnboardingCoordinator(defaults: defaults)
+        let priorSession = makeCoordinator()
         let priorWindow = UUID()
         priorSession.presentIfNeeded(owner: priorWindow)
         priorSession.dismiss(owner: priorWindow)
 
         // A fresh coordinator instance (e.g. a later launch) reading the
         // same defaults suite must still honor the "already asked" flag.
-        let relaunched = OnboardingCoordinator(defaults: defaults)
+        let relaunched = makeCoordinator()
         let window = UUID()
         relaunched.presentIfNeeded(owner: window)
 
@@ -59,7 +65,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
     }
 
     func testOnlyOneWindowEverClaimsThePrompt() {
-        let coordinator = OnboardingCoordinator(defaults: defaults)
+        let coordinator = makeCoordinator()
         let windowA = UUID()
         let windowB = UUID()
 
@@ -71,7 +77,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
     }
 
     func testDismissingFromANonOwningWindowIsANoOp() {
-        let coordinator = OnboardingCoordinator(defaults: defaults)
+        let coordinator = makeCoordinator()
         let windowA = UUID()
         let windowB = UUID()
         coordinator.presentIfNeeded(owner: windowA)
@@ -82,7 +88,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
     }
 
     func testReleaseIfOwnerFreesTheClaimForALaterWindow() {
-        let coordinator = OnboardingCoordinator(defaults: defaults)
+        let coordinator = makeCoordinator()
         let windowA = UUID()
         coordinator.presentIfNeeded(owner: windowA)
 
@@ -95,12 +101,29 @@ final class OnboardingCoordinatorTests: XCTestCase {
     }
 
     func testReleaseIfOwnerIgnoresANonOwningWindow() {
-        let coordinator = OnboardingCoordinator(defaults: defaults)
+        let coordinator = makeCoordinator()
         let windowA = UUID()
         coordinator.presentIfNeeded(owner: windowA)
 
         coordinator.releaseIfOwner(UUID())
 
         XCTAssertTrue(coordinator.isPresenting(owner: windowA), "releasing a different owner must not affect the real owner")
+    }
+
+    /// The branch that broke the build: someone who already set Galley as
+    /// their default reader must never see the prompt, and must not be
+    /// asked again later either.
+    func testNeverPromptsSomeoneWhoIsAlreadyDefault() {
+        let coordinator = makeCoordinator(alreadyDefault: true)
+        let window = UUID()
+
+        coordinator.presentIfNeeded(owner: window)
+
+        XCTAssertFalse(coordinator.isPresenting(owner: window), "must not nag an existing default")
+
+        let later = makeCoordinator()
+        let laterWindow = UUID()
+        later.presentIfNeeded(owner: laterWindow)
+        XCTAssertFalse(later.isPresenting(owner: laterWindow), "being default already counts as asked")
     }
 }
