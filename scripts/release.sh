@@ -38,6 +38,9 @@ ASC_KEY_ID="${ASC_KEY_ID:-KL448V4YTJ}"
 ASC_ISSUER_ID="${ASC_ISSUER_ID:?set ASC_ISSUER_ID (App Store Connect API issuer UUID)}"
 ASC_KEY_PATH="${ASC_KEY_PATH:-$HOME/Downloads/AuthKey_${ASC_KEY_ID}.p8}"
 ASC_WHATS_NEW="${ASC_WHATS_NEW:-}"
+# App Review Information -> Notes. Set this when resubmitting after a
+# rejection and point the reviewer at the exact thing they said was missing.
+ASC_REVIEW_NOTES="${ASC_REVIEW_NOTES:-}"
 
 BUILD_DIR="$ROOT/build/release-$VERSION"
 
@@ -166,7 +169,8 @@ if ! $SKIP_APPSTORE; then
             --version "$VERSION" \
             --pkg "$BUILD_DIR/export-appstore/Galley.pkg" \
             --key-id "$ASC_KEY_ID" --issuer-id "$ASC_ISSUER_ID" --key-path "$ASC_KEY_PATH" \
-            ${ASC_WHATS_NEW:+--whats-new "$ASC_WHATS_NEW"}
+            ${ASC_WHATS_NEW:+--whats-new "$ASC_WHATS_NEW"} \
+            ${ASC_REVIEW_NOTES:+--review-notes "$ASC_REVIEW_NOTES"}
     else
         echo "  skipped — the exported .pkg is at $BUILD_DIR/export-appstore/Galley.pkg"
     fi

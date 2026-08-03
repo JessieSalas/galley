@@ -193,6 +193,39 @@ def set_whats_new(asc, version_id, whats_new):
     print(f"==> Set 'What's New' on {len(locs)} localization(s)")
 
 
+def set_review_notes(asc, version_id, notes):
+    """Write App Review Information -> Notes.
+
+    Worth the extra call: 1.1.5 was rejected twice under Guideline 4 for a
+    Window-menu item that was present and working both times. When a fix is
+    a reviewer-discoverability fix, saying where to look is the fix.
+    """
+    if not notes:
+        return
+    detail = asc.get(f"/appStoreVersions/{version_id}/appStoreReviewDetail").get("data")
+    if detail:
+        asc.patch(f"/appStoreReviewDetails/{detail['id']}", {
+            "data": {
+                "type": "appStoreReviewDetails",
+                "id": detail["id"],
+                "attributes": {"notes": notes},
+            }
+        })
+    else:
+        asc.post("/appStoreReviewDetails", {
+            "data": {
+                "type": "appStoreReviewDetails",
+                "attributes": {"notes": notes},
+                "relationships": {
+                    "appStoreVersion": {
+                        "data": {"type": "appStoreVersions", "id": version_id}
+                    }
+                },
+            }
+        })
+    print("==> Set App Review notes")
+
+
 def find_or_create_version(asc, app_id, version, whats_new):
     existing = find_version(asc, app_id, version)
     if existing:
@@ -341,6 +374,7 @@ def cmd_submit(args):
     attach_build(asc, version_id, build_id)
     if not whats_new_set:
         set_whats_new(asc, version_id, args.whats_new)
+    set_review_notes(asc, version_id, args.review_notes)
 
     if args.no_submit:
         print("==> --no-submit set: build attached, stopping before review submission.")
@@ -365,6 +399,9 @@ def main():
 
     p_submit = sub.add_parser("submit", parents=[common], help="Upload, attach, and submit a build for review")
     p_submit.add_argument("--version", required=True, help="Marketing version, e.g. 1.1.5")
+    p_submit.add_argument("--review-notes", default="",
+                          help="App Review Information -> Notes; use it to point the reviewer "
+                               "straight at whatever a previous rejection said was missing")
     p_submit.add_argument("--pkg", required=True, help="Path to the exported .pkg")
     p_submit.add_argument("--build-number", help="CFBundleVersion; read from project.yml if omitted")
     p_submit.add_argument("--poll-seconds", type=int, default=1800)
