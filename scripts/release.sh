@@ -69,6 +69,15 @@ if ! git diff --quiet -- web/src 2>/dev/null; then
     exit 1
 fi
 
+echo "==> Tests"
+# Runs before the version bump so a red suite stops the release without
+# leaving a stray bump commit behind. 1.1.5 shipped a Guideline 4 rejection
+# that WindowMenuReopenTests catches, and the suite had never run at all
+# because the test target could not code sign — so this gate is the point.
+xcodebuild -project Galley.xcodeproj -scheme Galley -configuration Debug \
+    -derivedDataPath "$ROOT/build/test-$VERSION" test
+echo "  tests passed"
+
 git add project.yml Galley.xcodeproj
 git commit -m "Bump version to $VERSION"
 git tag "v$VERSION"
