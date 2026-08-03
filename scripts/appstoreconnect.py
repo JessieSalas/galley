@@ -239,7 +239,13 @@ def find_or_create_version(asc, app_id, version, whats_new):
     try:
         return create_version(asc, app_id, version, whats_new), True
     except requests.exceptions.HTTPError as e:
-        if e.response is None or e.response.status_code != 409:
+        # Apple refuses to create a second version while one is still open,
+        # but is inconsistent about which code it uses: 409 when the open
+        # version is PREPARE_FOR_SUBMISSION, 403 when it is REJECTED. Both
+        # mean the same thing, and the fix for both is the documented
+        # post-rejection flow — edit the open version in place. If this is
+        # really a permissions problem, the PATCH below fails loudly too.
+        if e.response is None or e.response.status_code not in (403, 409):
             raise
         return reuse_version(asc, most_recent_version(asc, app_id), version, whats_new), False
 
