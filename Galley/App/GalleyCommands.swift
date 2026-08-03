@@ -188,12 +188,18 @@ struct GalleyCommands: Commands {
         }
 
         // Guideline 4 (App Review): closing the last document window must
-        // leave a way back in without relaunching. The Help menu item below
-        // already does this; Apple's rejection specifically wants it (or
-        // equivalent) reachable from the Window menu, so it lives in both.
+        // leave an obvious way back in without relaunching. 1.1.5 put a lone
+        // "Welcome to Galley" here and was rejected anyway — sitting in the
+        // Window menu it reads as a help item, not as "get my window back."
+        // These say what they do. Both are always enabled and neither can
+        // dead-end: Reopen falls back to the bundled Welcome document.
         CommandGroup(after: .windowArrangement) {
-            Button("Welcome to Galley") {
-                WelcomeOpener.openWelcome()
+            Divider()
+            Button(WindowMenuTitles.reopen) {
+                WindowReopener.reopen()
+            }
+            Button(WindowMenuTitles.open) {
+                NSDocumentController.shared.openDocument(nil)
             }
         }
 

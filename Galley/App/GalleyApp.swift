@@ -76,6 +76,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+/// Titles for the Window-menu items that get a window back after the last one
+/// is closed. They live here, shared with the menu and with
+/// WindowMenuReopenTests, because App Review rejected 1.1.5 under Guideline 4
+/// for having no such item — the affordance is a shipping requirement, not a
+/// nicety, so a test asserts it by exactly these strings.
+enum WindowMenuTitles {
+    static let reopen = "Reopen Reader Window"
+    static let open = "Open Document…"
+}
+
+/// Always produces a document window, so the Window-menu item can never be a
+/// dead end: the last-read document if there is one, otherwise the bundled
+/// Welcome. Falls back to Welcome if reopening a recent fails, which it can
+/// under the sandbox once a security-scoped bookmark goes stale.
+enum WindowReopener {
+    static func reopen() {
+        guard let recent = NSDocumentController.shared.recentDocumentURLs.first else {
+            WelcomeOpener.openWelcome()
+            return
+        }
+        NSDocumentController.shared.openDocument(withContentsOf: recent, display: true) { _, _, error in
+            if error != nil { WelcomeOpener.openWelcome() }
+        }
+    }
+}
+
 enum WelcomeOpener {
     static var url: URL? {
         Bundle.main.url(forResource: "Welcome", withExtension: "md", subdirectory: "Samples")
