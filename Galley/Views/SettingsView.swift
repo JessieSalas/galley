@@ -49,8 +49,14 @@ private struct ReadingSettings: View {
                 HStack {
                     Button("Set Galley as Default") {
                         defaultAppState = .working
-                        DefaultAppManager.setGalleyAsDefault { success in
-                            defaultAppState = success ? .succeeded : .failed
+                        DefaultAppManager.setGalleyAsDefault { outcome in
+                            switch outcome {
+                            case .success: defaultAppState = .succeeded
+                            // Partial counts as failed on purpose: some of
+                            // your files would still open elsewhere, and a
+                            // green check over that is the whole complaint.
+                            case .partial, .failure: defaultAppState = .failed
+                            }
                         }
                     }
                     .disabled(defaultAppState == .working)
@@ -66,7 +72,7 @@ private struct ReadingSettings: View {
                     Text("That didn't take. Do it by hand instead: select any .md file in Finder, press ⌘I, choose Galley under “Open with,” then click **Change All**.")
                         .font(.callout)
                 } else {
-                    Text("Covers every Markdown extension (.md, .markdown, .mdown, .mkdn, .mkd) in one step. Galley never sets itself as default without you clicking this.")
+                    Text("Covers every Markdown extension (.md, .markdown, .mdown, .mkdn, .mkd, .mdx, .qmd, .rmd) in one step, and checks afterwards that it actually took. Galley never sets itself as default without you clicking this.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

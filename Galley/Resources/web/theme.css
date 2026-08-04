@@ -339,7 +339,14 @@ body {
   color: var(--callout-accent, var(--muted));
   margin-bottom: 0.5em;
 }
-.doc .callout p:last-child { margin-bottom: 0; }
+.doc .callout > :last-child { margin-bottom: 0; }
+/* Notion callouts carry an emoji icon instead of a severity word. */
+.doc .callout > .callout-icon {
+  font-size: 1.05em;
+  line-height: 1;
+  margin-bottom: 0.55em;
+}
+.doc .callout[data-kind="callout"] { --callout-accent: var(--line-strong); }
 .doc .callout[data-kind="note"] { --callout-accent: var(--syn-blue); }
 .doc .callout[data-kind="tip"] { --callout-accent: var(--syn-teal); }
 .doc .callout[data-kind="important"] { --callout-accent: var(--syn-purple); }

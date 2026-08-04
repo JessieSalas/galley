@@ -11,6 +11,7 @@ import anchor from "markdown-it-anchor";
 import taskLists from "markdown-it-task-lists";
 import hljs from "highlight.js/lib/common";
 import * as yaml from "js-yaml";
+import { normalizeDialects, calloutPlugin } from "./dialects.js";
 
 // A few extra languages beyond the "common" set that show up constantly
 // in AI-era markdown.
@@ -20,8 +21,6 @@ import nginx from "highlight.js/lib/languages/nginx";
 hljs.registerLanguage("swift", swift);
 hljs.registerLanguage("dockerfile", dockerfile);
 hljs.registerLanguage("nginx", nginx);
-
-const CALLOUT_KINDS = ["note", "tip", "important", "warning", "caution"];
 
 const state = {
   docDir: null, // absolute dir of the open file, for relative asset resolution
@@ -77,7 +76,8 @@ function makeMD(typographer) {
     .use(anchor, {
       slugify: slugify,
       tabIndex: false,
-    });
+    })
+    .use(calloutPlugin);
   instance.linkify.set({ fuzzyLink: false });
   installRules(instance);
   return instance;
@@ -251,37 +251,6 @@ function sanitizeDOM(root) {
         el.removeAttribute(attr.name);
       }
     }
-  }
-}
-
-/* ---------------- GitHub-style alerts ---------------- */
-
-function transformCallouts(root) {
-  for (const bq of root.querySelectorAll("blockquote")) {
-    const first = bq.querySelector("p");
-    if (!first) continue;
-    const m = /^\[!(\w+)\]\s*/.exec(first.textContent || "");
-    if (!m) continue;
-    const kind = m[1].toLowerCase();
-    if (!CALLOUT_KINDS.includes(kind)) continue;
-
-    const div = document.createElement("div");
-    div.className = "callout";
-    div.dataset.kind = kind;
-    const title = document.createElement("div");
-    title.className = "callout-title";
-    title.textContent = kind;
-    div.appendChild(title);
-
-    // strip the [!kind] marker from the first paragraph
-    const walker = document.createTreeWalker(first, NodeFilter.SHOW_TEXT);
-    let node = walker.nextNode();
-    if (node) node.textContent = node.textContent.replace(/^\[!\w+\]\s*/, "");
-    while (bq.firstChild) div.appendChild(bq.firstChild);
-    // drop an empty leading paragraph if the marker was alone
-    const lead = div.querySelector(".callout-title + p");
-    if (lead && !lead.textContent.trim() && !lead.querySelector("img")) lead.remove();
-    bq.replaceWith(div);
   }
 }
 
@@ -670,7 +639,9 @@ const Reader = {
     const prevScroll = document.documentElement.scrollTop;
     const wasAtBottom = isNearBottom();
 
-    const { fm, body } = splitFrontMatter(markdown);
+    const { fm, body: rawBody } = splitFrontMatter(markdown);
+    // After the front matter split so YAML values are never rewritten.
+    const body = normalizeDialects(rawBody);
     const content = document.getElementById("content");
 
     renderFrontMatter(showFrontMatter ? fm : null);
@@ -678,7 +649,6 @@ const Reader = {
     if (seq !== state.lastRenderSeq) return; // superseded
 
     sanitizeDOM(content);
-    transformCallouts(content);
     sanitizeRemote(content);
     wireContent(content);
 

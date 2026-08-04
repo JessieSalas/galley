@@ -9,6 +9,7 @@ import MarkdownIt from "markdown-it";
 import footnote from "markdown-it-footnote";
 import taskLists from "markdown-it-task-lists";
 import hljs from "highlight.js/lib/common";
+import { normalizeDialects, calloutPlugin } from "./dialects.js";
 
 function escapeHtml(s) {
   return s
@@ -32,7 +33,8 @@ const md = new MarkdownIt({
   },
 })
   .use(footnote)
-  .use(taskLists, { enabled: false, label: true });
+  .use(taskLists, { enabled: false, label: true })
+  .use(calloutPlugin);
 
 md.linkify.set({ fuzzyLink: false });
 
@@ -44,7 +46,11 @@ function stripFrontMatter(text) {
 }
 
 globalThis.qlRender = function qlRender(markdown) {
-  const { fmLines, body } = stripFrontMatter(markdown);
+  const { fmLines, body: rawBody } = stripFrontMatter(markdown);
+  // Same normalization the app runs, so a Notion export can't render one way
+  // in the preview and another way once it's open. Matters more here: this
+  // renderer keeps html:false, so without it <aside> shows as literal tags.
+  const body = normalizeDialects(rawBody);
   let fmHTML = "";
   if (fmLines) {
     const rows = [];

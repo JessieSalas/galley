@@ -86,6 +86,16 @@ fi
     echo "error: App Store Connect Python deps unavailable" >&2; exit 1; }
 ASC_PY="$ASC_VENV/bin/python"
 
+echo "==> Tests: web renderer"
+# The dialect/callout logic is JavaScript, so the Swift suite can't cover it.
+# Skipped rather than failed when node is absent: the committed bundles mean
+# a release doesn't otherwise need node at all.
+if command -v node >/dev/null 2>&1; then
+    node "$ROOT/web/test.mjs"
+else
+    echo "  skipped (node not installed)"
+fi
+
 echo "==> Tests"
 # Runs before the version bump so a red suite stops the release without
 # leaving a stray bump commit behind. 1.1.5 shipped a Guideline 4 rejection

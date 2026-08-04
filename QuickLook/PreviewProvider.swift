@@ -92,6 +92,14 @@ final class PreviewProvider: QLPreviewProvider, QLPreviewingController {
     a { color: var(--ink); }
     blockquote { margin: 1.2em 0; padding-left: 1.1em;
       border-left: 2px solid var(--line-strong); color: var(--ink-2); }
+    .callout { margin: 1.3em 0; padding: 0.85rem 1rem; border: 1px solid var(--line);
+      border-left: 2px solid var(--callout-accent, var(--line-strong));
+      border-radius: 10px; background: var(--bg-hi); }
+    .callout > .callout-title { font: 550 0.68em ui-monospace, "SF Mono", monospace;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--callout-accent, var(--ink-2)); margin-bottom: 0.45em; }
+    .callout > .callout-icon { font-size: 1.05em; line-height: 1; margin-bottom: 0.5em; }
+    .callout > :last-child { margin-bottom: 0; }
     code { font: 0.86em ui-monospace, "SF Mono", monospace;
       background: var(--bg-hi); border: 1px solid var(--line);
       border-radius: 4px; padding: 0.08em 0.32em; }

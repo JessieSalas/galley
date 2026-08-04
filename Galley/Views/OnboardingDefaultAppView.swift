@@ -47,8 +47,8 @@ struct OnboardingDefaultAppView: View {
 
                 Button(stage == .working ? "Setting…" : "Set as Default") {
                     stage = .working
-                    DefaultAppManager.setGalleyAsDefault { success in
-                        stage = success ? .done : .failed
+                    DefaultAppManager.setGalleyAsDefault { outcome in
+                        if case .success = outcome { stage = .done } else { stage = .failed }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
                             onFinished()
                         }
