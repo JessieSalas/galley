@@ -16,7 +16,11 @@ npx esbuild src/render.js --bundle --minify --format=iife \
 npx esbuild src/ql.js --bundle --minify --format=iife \
   --outfile="$QL_RES/ql.bundle.js"
 
-# fonts (latin variable subsets only)
+# fonts (latin variable subsets only).
+# Fraunces and the three Kept Type faces (numen-title-*, kept-sans-*,
+# legibility-sans-*) aren't on npm — they're vendored straight into
+# $APP_WEB/fonts from github.com/JessieSalas/kept-legibility-index and
+# committed. Nothing here touches them, so this script won't clobber them.
 mkdir -p "$APP_WEB/fonts"
 cp node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2 "$APP_WEB/fonts/"
 cp node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2 "$APP_WEB/fonts/"

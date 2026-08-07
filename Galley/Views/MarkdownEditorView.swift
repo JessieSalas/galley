@@ -68,18 +68,19 @@ struct MarkdownEditorView: NSViewRepresentable {
         coordinator.model?.editorTextView = nil
     }
 
-    /// FontChoice → NSFont for the editor. Fraunces/Bricolage/Inter aren't
-    /// installed system-wide, so the editor only honors mono and serif
-    /// choices and falls back to the system font for everything else —
-    /// source editing is mono territory regardless of the document's body font.
+    /// FontChoice → NSFont for the editor. The bundled webfonts (Kept Type,
+    /// Fraunces, Bricolage, Inter) aren't installed system-wide, so the
+    /// editor only honors mono and serif choices and falls back to the
+    /// system font for everything else — source editing is mono territory
+    /// regardless of the document's body font.
     static func nsFont(for choice: FontChoice, size: CGFloat) -> NSFont {
         switch choice {
         case .jetbrainsMono, .sfMono:
             return NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
-        case .newYork:
+        case .newYork, .numenTitle:
             let descriptor = NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body).withDesign(.serif)
             return descriptor.flatMap { NSFont(descriptor: $0, size: size) } ?? NSFont.systemFont(ofSize: size)
-        case .fraunces, .bricolage, .inter, .system:
+        case .keptSans, .legibilitySans, .fraunces, .bricolage, .inter, .system:
             return NSFont.systemFont(ofSize: size)
         }
     }

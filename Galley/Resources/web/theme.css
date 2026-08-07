@@ -5,11 +5,36 @@
    mono eyebrows, one spectral gradient used sparingly.
    ============================================================ */
 
+/* ---------- Kept Type ----------
+   The three faces from the Kept Legibility Index, all SIL OFL 1.1. Unlike
+   the variable fonts below they ship as static weights, so each one needs
+   its own @font-face; 400-800 covers body text (400), strong (650 -> 700)
+   and the heading-weight slider (560-760 -> 600/700/800). Neither sans has
+   an italic cut — emphasis renders as a synthesised oblique, which is the
+   trade for letterforms this deliberate.
+   Provenance and licenses: fonts/OFL-*.txt, ACKNOWLEDGEMENTS.md. */
+
+@font-face { font-family: "Numen Title"; src: url("fonts/numen-title-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Numen Title"; src: url("fonts/numen-title-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Numen Title"; src: url("fonts/numen-title-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Numen Title"; src: url("fonts/numen-title-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Numen Title"; src: url("fonts/numen-title-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+
+@font-face { font-family: "Kept Sans"; src: url("fonts/kept-sans-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kept Sans"; src: url("fonts/kept-sans-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kept Sans"; src: url("fonts/kept-sans-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kept Sans"; src: url("fonts/kept-sans-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kept Sans"; src: url("fonts/kept-sans-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+
+@font-face { font-family: "Legibility Sans"; src: url("fonts/legibility-sans-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Legibility Sans"; src: url("fonts/legibility-sans-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Legibility Sans"; src: url("fonts/legibility-sans-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Legibility Sans"; src: url("fonts/legibility-sans-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Legibility Sans"; src: url("fonts/legibility-sans-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+
 @font-face {
-  /* Galley's own display face — deliberately not Bricolage Grotesque,
-     which is the Thesis Labs / kept house headline font. Fraunces is a
-     warm variable serif; it also just suits a "typeset manuscript" app
-     better than a grotesque sans does. */
+  /* Kept for anyone who preferred the old Thesis display face, and as the
+     serif fallback behind Numen Title (which is drawn on Fraunces' bones). */
   font-family: "Fraunces Variable";
   src: url("fonts/fraunces-latin-wght-normal.woff2") format("woff2-variations");
   font-weight: 100 900;
@@ -84,8 +109,8 @@
   /* knobs driven from native settings — these are the "thesis" light
      defaults, kept as the no-flash fallback until the first applyOptions()
      call sets the real theme's values as inline custom properties. */
-  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
-  --font-body: "Inter Variable", system-ui, -apple-system, sans-serif;
+  --font-display: "Numen Title", "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-body: "Kept Sans", "Inter Variable", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
   --heading-weight: 600;
   --measure: 70ch;

@@ -42,7 +42,8 @@ MADE FOR THE AI ERA
 • Recognizes CLAUDE.md, AGENTS.md, and friends
 
 A REAL MAC APP
-• Five themes — Thesis, Manuscript, Studio, Terminal, Editorial — each with
+• Six themes — Thesis, Manuscript, Studio, Terminal, Editorial,
+  Legibility — each with
   its own light and dark, customizable fonts and colors
 • A deliberate edit mode (⌘⇧E) for quick fixes: syntax-highlighted source,
   undo, explicit save — documents still always OPEN read-only

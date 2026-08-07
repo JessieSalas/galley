@@ -185,10 +185,10 @@ Full multi-agent research runs behind this doc. Key verified findings:
 
 ## v1.1 addendum — themes and the edit-mode decision
 
-**Themes.** One brand theme became a theme *system*: five built-ins (Thesis,
-Manuscript, Studio, Terminal, Editorial), each defining a light and a dark
-palette, typography (display/body/mono, heading weight), and whether the
-spectral accents appear (Thesis only, by default). Users can customize fonts,
+**Themes.** One brand theme became a theme *system*: six built-ins (Thesis,
+Manuscript, Studio, Terminal, Editorial, Legibility), each defining a light
+and a dark palette, typography (display/body/mono, heading weight), and whether
+the spectral accents appear (Thesis only, by default). Users can customize fonts,
 heading weight, background/text/accent per variant, and toggle the spectral
 accents per theme — overrides layer on the built-in and reset cleanly. The
 engine is CSS-custom-property based: Swift resolves theme + overrides + mode
@@ -203,6 +203,36 @@ you must consciously switch into edit mode can still never mangle a file
 during a screen share, and never greets you with a cursor. Editors-as-viewers
 fail because editing is the default state; Galley keeps reading as the default
 state, permanently.
+
+## v1.2 addendum — Kept Type
+
+Galley's own faces now come from the Kept Legibility Index
+(`github.com/JessieSalas/kept-legibility-index`), all SIL OFL 1.1:
+
+- **Thesis** is set in **Numen Title** (display) over **Kept Sans** (body),
+  replacing Fraunces/Inter. Numen Title is drawn on Fraunces' bones with its
+  axes pinned by measurement, so the house serif is the same animal, just
+  measured. The paper color itself is unchanged (`#F1ECE2` light, `#17160F`
+  dark) — an earlier pass desaturated it, but the original cream is the one
+  that shipped.
+- **Legibility** is a new built-in set entirely in **Legibility Sans**,
+  the index's most legible face (derived from Atkinson Hyperlegible Next, the
+  only face in the index legible at 8 px). It spends everything on contrast
+  rather than character: ink at ~19:1, and secondary text, comments, links,
+  and syntax all held at 5:1 or better instead of the ~3:1 the other themes
+  use for de-emphasis. Syntax colors separate by lightness as well as hue.
+- **Studio** borrows Legibility's backdrop (`#FBFBFA`/`#FFFFFF`/`#F0F0EE`
+  light, `#101113`/`#191B1E`/`#0A0B0C` dark) in place of its old pure-white/
+  near-black surfaces. Ink, accent, hairlines and syntax are untouched — both
+  palettes were already near-neutral, so contrast moves by well under a
+  point anywhere.
+
+The three faces ship as **static weights** (400–800), not variable, so
+`theme.css` declares one `@font-face` per weight and the browser snaps the
+heading-weight slider (560–760) to the nearest cut. Neither sans has an
+italic; emphasis is a synthesised oblique. The standalone-HTML exporter
+rewrites `format("woff2")` as well as `format("woff2-variations")` when it
+strips bundled fonts — miss one and an export carries a dead relative URL.
 
 ## Roadmap (post-v1)
 

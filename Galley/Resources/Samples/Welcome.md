@@ -12,10 +12,10 @@ they are; they just finally look the way they deserve.
 1. **Set Galley as your default.** Select any `.md` file in Finder, press
    `⌘I`, choose **Galley** under *Open with*, and click **Change All**.
    From then on, double-click means *read*.
-2. **Pick your page.** Click the `Aa` button in the toolbar — five themes
-   (Thesis, Manuscript, Studio, Terminal, Editorial), each with its own light
-   and dark, plus size and line width. Fonts and colors are customizable per
-   theme in Settings.
+2. **Pick your page.** Click the `Aa` button in the toolbar — six themes
+   (Thesis, Manuscript, Studio, Terminal, Editorial, Legibility), each with
+   its own light and dark, plus size and line width. Fonts and colors are
+   customizable per theme in Settings.
 3. **Press Space in Finder** on any Markdown file — Galley quietly renders
    your Quick Look previews too.
 

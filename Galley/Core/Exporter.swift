@@ -74,9 +74,12 @@ enum Exporter {
     private static func inlineThemeCSS(into html: String) -> String {
         guard let cssURL = Bundle.main.url(forResource: "theme", withExtension: "css", subdirectory: "web"),
               let css = try? String(contentsOf: cssURL, encoding: .utf8) else { return html }
-        // Bundled fonts can't ship inside a single file; fall back to system faces.
+        // Bundled fonts can't ship inside a single file; fall back to system
+        // faces. Matches both the variable faces ("woff2-variations") and the
+        // static-weight Kept Type cuts ("woff2") — miss one and the export
+        // carries a dead relative URL to a file only the app bundle has.
         let standalone = css.replacingOccurrences(
-            of: #"url\(\"fonts/[^\"]+\"\) format\(\"woff2-variations\"\)"#,
+            of: #"url\(\"fonts/[^\"]+\"\) format\(\"woff2[^\"]*\"\)"#,
             with: "local(\"Helvetica Neue\")",
             options: .regularExpression
         )

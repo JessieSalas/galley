@@ -14,7 +14,7 @@ Free
 
 ## Promotional text (170 chars)
 Double-click a Markdown file. Get a typeset page, not source code. Read-only
-by design, live to changes, beautiful in five themes. Free and open source.
+by design, live to changes, beautiful in six themes. Free and open source.
 
 ## Description
 
@@ -45,7 +45,8 @@ and keeps your place. A small pill says updated. That is the whole ceremony.
 • Recognizes CLAUDE.md, AGENTS.md, and friends
 
 A REAL MAC APP
-Five themes: Thesis, Manuscript, Studio, Terminal, Editorial. Each with its
+Six themes: Thesis, Manuscript, Studio, Terminal, Editorial, Legibility.
+Each with its
 own light and dark. Fonts, colors, and accents are yours to change, and the
 defaults are the best ones.
 • Outline sidebar, find, presentation mode
@@ -82,7 +83,7 @@ Data not collected. (No tracking, no identifiers, no analytics.)
 
 1. `docs/launch/screenshots/appstore-1-hero.png`, Thesis theme, front-matter card and opening prose
 2. `docs/launch/screenshots/appstore-2-code-dark.png`, Ink theme, Swift and Python code with real syntax color
-3. `docs/launch/screenshots/appstore-3-themes.png`, all five themes side by side, light and dark
+3. `docs/launch/screenshots/appstore-3-themes.png`, all six themes side by side, light and dark
 4. `docs/launch/screenshots/appstore-4-diagrams.png`, a Mermaid flowchart and a rendered table
 5. `docs/launch/screenshots/appstore-5-math.png`, inline and display math, plus callout cards
 6. `docs/launch/screenshots/appstore-6-terminal.png`, Terminal theme, long-form prose with a blockquote

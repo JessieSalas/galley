@@ -10,11 +10,17 @@ struct ThemePalette: Codable, Equatable {
 }
 
 enum FontChoice: String, Codable, CaseIterable, Identifiable {
+    /// Kept Type first — they're the house faces now. Raw values are what
+    /// get persisted in theme overrides, so this order is presentation only.
+    case numenTitle, keptSans, legibilitySans
     case fraunces, bricolage, inter, newYork, system, jetbrainsMono, sfMono
     var id: String { rawValue }
 
     var css: String {
         switch self {
+        case .numenTitle: "\"Numen Title\", \"Fraunces Variable\", ui-serif, Georgia, serif"
+        case .keptSans: "\"Kept Sans\", \"Inter Variable\", system-ui, -apple-system, sans-serif"
+        case .legibilitySans: "\"Legibility Sans\", \"Inter Variable\", system-ui, -apple-system, sans-serif"
         case .fraunces: "\"Fraunces Variable\", ui-serif, Georgia, serif"
         case .bricolage: "\"Bricolage Grotesque Variable\", ui-rounded, system-ui, sans-serif"
         case .inter: "\"Inter Variable\", system-ui, -apple-system, sans-serif"
@@ -27,6 +33,9 @@ enum FontChoice: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
+        case .numenTitle: "Numen Title (serif)"
+        case .keptSans: "Kept Sans"
+        case .legibilitySans: "Legibility Sans"
         case .fraunces: "Fraunces"
         case .bricolage: "Bricolage Grotesque"
         case .inter: "Inter"
@@ -83,7 +92,7 @@ enum ThemeStore {
     static let builtIns: [GalleyTheme] = [
         GalleyTheme(
             id: "thesis", name: "Thesis",
-            blurb: "Warm paper and ink. Galley's own house style.",
+            blurb: "Warm paper and ink, set in Numen Title and Kept Sans.",
             light: ThemePalette(
                 bg: "#F1ECE2", bgHi: "#F8F5EE", bgDeep: "#EAE4D6",
                 ink: "#15140E", ink2: "#4A4639", ink3: "#403C31", muted: "#8E8879",
@@ -100,7 +109,7 @@ enum ThemeStore {
                 synRed: "#FF8A9A", synAmber: "#FFC37A", synTeal: "#5DE3D0",
                 synBlue: "#8FBCFF", synPurple: "#C9A2FF", synComment: "#7D7869"
             ),
-            displayFont: .fraunces, bodyFont: .inter, monoFont: .jetbrainsMono,
+            displayFont: .numenTitle, bodyFont: .keptSans, monoFont: .jetbrainsMono,
             headingWeight: 600, spectral: true
         ),
         GalleyTheme(
@@ -128,8 +137,12 @@ enum ThemeStore {
         GalleyTheme(
             id: "studio", name: "Studio",
             blurb: "Neutral, modern, gets out of the way.",
+            // bg/bgHi/bgDeep borrowed from Legibility's backdrop — the rest
+            // of Studio (ink, accent, hairlines, syntax) is untouched, and
+            // since both palettes were already near-white/near-black
+            // neutrals the swap barely moves contrast.
             light: ThemePalette(
-                bg: "#FFFFFF", bgHi: "#F6F7F8", bgDeep: "#EEF0F2",
+                bg: "#FBFBFA", bgHi: "#FFFFFF", bgDeep: "#F0F0EE",
                 ink: "#17181A", ink2: "#45484D", ink3: "#3A3D42", muted: "#8A8F98",
                 line: "#E4E6EA", lineStrong: "#CBCFD6",
                 accent: "#3B72E8", live: "#12A594",
@@ -137,7 +150,7 @@ enum ThemeStore {
                 synBlue: "#2F6BDF", synPurple: "#7A4FD0", synComment: "#8A8F98"
             ),
             dark: ThemePalette(
-                bg: "#131417", bgHi: "#1B1D21", bgDeep: "#0D0E10",
+                bg: "#101113", bgHi: "#191B1E", bgDeep: "#0A0B0C",
                 ink: "#E8EAED", ink2: "#B5BAC3", ink3: "#9BA1AB", muted: "#7E838C",
                 line: "#2A2D33", lineStrong: "#3D4149",
                 accent: "#7AA5FF", live: "#4ADFC4",
@@ -190,6 +203,34 @@ enum ThemeStore {
             ),
             displayFont: .bricolage, bodyFont: .inter, monoFont: .jetbrainsMono,
             headingWeight: 760, spectral: false
+        ),
+        GalleyTheme(
+            id: "legibility", name: "Legibility",
+            blurb: "Legibility Sans, maximum contrast. Built only to be read.",
+            // Every choice here is spent on contrast rather than character.
+            // Ink sits near 19:1 against the page; secondary text and
+            // comments hold ~6:1 instead of the ~3:1 the other themes use
+            // for de-emphasis, and hairlines are strong enough to survive a
+            // low-contrast display. Syntax colors separate by lightness as
+            // well as hue so red/green confusion doesn't collapse them.
+            light: ThemePalette(
+                bg: "#FBFBFA", bgHi: "#FFFFFF", bgDeep: "#F0F0EE",
+                ink: "#0B0B0C", ink2: "#33353A", ink3: "#2A2C30", muted: "#5C5F66",
+                line: "#CFD1D4", lineStrong: "#A8ABB0",
+                accent: "#1450C8", live: "#0F7A5F",
+                synRed: "#B32347", synAmber: "#8A5A00", synTeal: "#06695C",
+                synBlue: "#1450C8", synPurple: "#6B3FC4", synComment: "#5C5F66"
+            ),
+            dark: ThemePalette(
+                bg: "#101113", bgHi: "#191B1E", bgDeep: "#0A0B0C",
+                ink: "#F2F3F5", ink2: "#C8CBD1", ink3: "#B2B6BD", muted: "#8B9099",
+                line: "#2E3238", lineStrong: "#464B53",
+                accent: "#8FB6FF", live: "#35D6A8",
+                synRed: "#FF8FA3", synAmber: "#F0C065", synTeal: "#4FDCC0",
+                synBlue: "#8FB6FF", synPurple: "#C3A3FF", synComment: "#8B9099"
+            ),
+            displayFont: .legibilitySans, bodyFont: .legibilitySans, monoFont: .jetbrainsMono,
+            headingWeight: 700, spectral: false
         ),
     ]
 

@@ -87,6 +87,9 @@ struct Palette {
 }
 
 let fontCSS: [String: String] = [
+    "numenTitle": "\"Numen Title\", \"Fraunces Variable\", ui-serif, Georgia, serif",
+    "keptSans": "\"Kept Sans\", \"Inter Variable\", system-ui, -apple-system, sans-serif",
+    "legibilitySans": "\"Legibility Sans\", \"Inter Variable\", system-ui, -apple-system, sans-serif",
     "fraunces": "\"Fraunces Variable\", ui-serif, Georgia, serif",
     "bricolage": "\"Bricolage Grotesque Variable\", ui-rounded, system-ui, sans-serif",
     "inter": "\"Inter Variable\", system-ui, -apple-system, sans-serif",
@@ -126,7 +129,7 @@ let themes: [String: Theme] = [
             synRed: "#FF8A9A", synAmber: "#FFC37A", synTeal: "#5DE3D0",
             synBlue: "#8FBCFF", synPurple: "#C9A2FF", synComment: "#7D7869"
         ),
-        displayFont: "fraunces", bodyFont: "inter", monoFont: "jetbrainsMono",
+        displayFont: "numenTitle", bodyFont: "keptSans", monoFont: "jetbrainsMono",
         headingWeight: 600, spectral: true
     ),
     "manuscript": Theme(
@@ -153,7 +156,7 @@ let themes: [String: Theme] = [
     "studio": Theme(
         id: "studio",
         light: Palette(
-            bg: "#FFFFFF", bgHi: "#F6F7F8", bgDeep: "#EEF0F2",
+            bg: "#FBFBFA", bgHi: "#FFFFFF", bgDeep: "#F0F0EE",
             ink: "#17181A", ink2: "#45484D", ink3: "#3A3D42", muted: "#8A8F98",
             line: "#E4E6EA", lineStrong: "#CBCFD6",
             accent: "#3B72E8", live: "#12A594",
@@ -161,7 +164,7 @@ let themes: [String: Theme] = [
             synBlue: "#2F6BDF", synPurple: "#7A4FD0", synComment: "#8A8F98"
         ),
         dark: Palette(
-            bg: "#131417", bgHi: "#1B1D21", bgDeep: "#0D0E10",
+            bg: "#101113", bgHi: "#191B1E", bgDeep: "#0A0B0C",
             ink: "#E8EAED", ink2: "#B5BAC3", ink3: "#9BA1AB", muted: "#7E838C",
             line: "#2A2D33", lineStrong: "#3D4149",
             accent: "#7AA5FF", live: "#4ADFC4",
@@ -212,6 +215,27 @@ let themes: [String: Theme] = [
         ),
         displayFont: "bricolage", bodyFont: "inter", monoFont: "jetbrainsMono",
         headingWeight: 760, spectral: false
+    ),
+    "legibility": Theme(
+        id: "legibility",
+        light: Palette(
+            bg: "#FBFBFA", bgHi: "#FFFFFF", bgDeep: "#F0F0EE",
+            ink: "#0B0B0C", ink2: "#33353A", ink3: "#2A2C30", muted: "#5C5F66",
+            line: "#CFD1D4", lineStrong: "#A8ABB0",
+            accent: "#1450C8", live: "#0F7A5F",
+            synRed: "#B32347", synAmber: "#8A5A00", synTeal: "#06695C",
+            synBlue: "#1450C8", synPurple: "#6B3FC4", synComment: "#5C5F66"
+        ),
+        dark: Palette(
+            bg: "#101113", bgHi: "#191B1E", bgDeep: "#0A0B0C",
+            ink: "#F2F3F5", ink2: "#C8CBD1", ink3: "#B2B6BD", muted: "#8B9099",
+            line: "#2E3238", lineStrong: "#464B53",
+            accent: "#8FB6FF", live: "#35D6A8",
+            synRed: "#FF8FA3", synAmber: "#F0C065", synTeal: "#4FDCC0",
+            synBlue: "#8FB6FF", synPurple: "#C3A3FF", synComment: "#8B9099"
+        ),
+        displayFont: "legibilitySans", bodyFont: "legibilitySans", monoFont: "jetbrainsMono",
+        headingWeight: 700, spectral: false
     ),
 ]
 
@@ -318,12 +342,24 @@ func snapshotPNG(_ webView: WKWebView, pixelWidth: Int, pixelHeight: Int, to pat
     // backing scale factor, which depends on whatever screen happens to be
     // "main" in the calling session (varies run to run — an attached
     // non-Retina external display makes it 1, silently halving output
-    // dimensions relative to the assumed-2x point-size layout). Pinning it
-    // to the exact target pixel width makes the output deterministic
-    // regardless of the environment; height follows from the aspect ratio,
+    // dimensions relative to the assumed-2x point-size layout).
+    //
+    // WKSnapshotConfiguration.snapshotWidth is documented in POINTS, not
+    // pixels — WebKit multiplies it by the real window/device backing scale
+    // factor to get the final bitmap width. Passing the raw target pixel
+    // value here (as this used to) made every output exactly 2x too big on
+    // any Retina-main-screen machine (confirmed empirically: a requested
+    // 1440x900 came out 2880x1800, 480x1800 came out 960x3600) because it
+    // was double-counted: once implicitly via the point-sized webView frame,
+    // and again via WebKit's own points-to-pixels multiplication. Dividing
+    // by our fixed `backingScale` assumption here converts the target pixel
+    // width back to points, so the two multiplications cancel and the
+    // output lands on the exact target pixel size (as long as the real
+    // device scale matches `backingScale`, the same assumption the rest of
+    // this file already depends on). Height follows from the aspect ratio,
     // which already matches by construction (WebJobRunner's point-size is
     // pixelWidth/backingScale x pixelHeight/backingScale).
-    cfg.snapshotWidth = NSNumber(value: pixelWidth)
+    cfg.snapshotWidth = NSNumber(value: Double(pixelWidth) / Double(backingScale))
     var image: NSImage?
     var finished = false
     var errText: String?
