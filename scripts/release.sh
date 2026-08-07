@@ -76,10 +76,24 @@ fi
 # python3 does not have. Discovering that at the final step, after a build
 # and two notarizations, is the worst possible time — so build the venv now
 # and prove the imports work before anything slow starts.
+#
+# Plain `python3` is whatever shadows first on PATH, which on a dev machine
+# is often Anaconda's — and Anaconda's Python 3.9 build fails to import a
+# freshly pip-installed `cryptography` with a linker error
+# ("symbol not found ... _DTLS_get_data_mtu"): the wheel's Rust extension
+# wants a newer OpenSSL than whatever Anaconda's own Python links against.
+# Prefer a real Homebrew CPython (tested against current wheels) and only
+# fall back to Apple's bundled /usr/bin/python3 if Homebrew isn't present.
+ASC_PYTHON_BIN=""
+for candidate in /opt/homebrew/bin/python3.12 /opt/homebrew/bin/python3.11 /opt/homebrew/bin/python3 /usr/bin/python3; do
+    [[ -x "$candidate" ]] && { ASC_PYTHON_BIN="$candidate"; break; }
+done
+[[ -n "$ASC_PYTHON_BIN" ]] || { echo "error: no usable python3 found for the App Store Connect venv" >&2; exit 1; }
+
 ASC_VENV="$ROOT/build/.ascvenv"
 if [[ ! -x "$ASC_VENV/bin/python" ]]; then
-    echo "==> Creating Python venv for App Store Connect deps"
-    python3 -m venv "$ASC_VENV"
+    echo "==> Creating Python venv for App Store Connect deps ($ASC_PYTHON_BIN)"
+    "$ASC_PYTHON_BIN" -m venv "$ASC_VENV"
 fi
 "$ASC_VENV/bin/pip" install -q pyjwt cryptography requests
 "$ASC_VENV/bin/python" -c "import jwt, requests" || {
